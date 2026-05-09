@@ -1,33 +1,27 @@
 @echo off
 chcp 65001 >nul
 echo ======================================
-echo    Starting Frontend Dev Server...
+echo    用户端前端 - 端口80
 echo ======================================
 echo.
 
 pushd "%~dp0"
 
-if not exist "node_modules\" (
-    echo [INFO] Installing dependencies...
-    echo.
-    call npm install
+if not exist "dist\" (
+    echo [INFO] dist 目录不存在，正在构建...
+    call npm run build
     if errorlevel 1 (
-        echo.
-        echo [ERROR] npm install failed
+        echo [ERROR] 构建失败
         pause
         exit /b 1
     )
-    echo.
-    echo [INFO] Done.
-    echo.
 )
 
-echo Starting dev server...
-echo.
-call npm run dev -- --host
-if errorlevel 1 (
-    echo.
-    echo [ERROR] Start failed
-    pause
-    exit /b 1
-)
+echo [INFO] 启动 nginx...
+cd nginx
+start "" nginx.exe
+cd ..
+
+echo [INFO] 用户端已启动: http://localhost:80
+echo [INFO] 停止请运行 stop.bat
+timeout /t 3 >nul

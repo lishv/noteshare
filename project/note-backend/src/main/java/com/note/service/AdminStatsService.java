@@ -8,6 +8,7 @@ import com.note.mapper.UserMapper;
 import com.note.vo.DistributionVO;
 import com.note.vo.NoteVO;
 import com.note.vo.TrendVO;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -28,17 +29,20 @@ public class AdminStatsService {
         this.noteItemMapper = noteItemMapper;
     }
 
+    @Cacheable(value = "stats", key = "'regTrend:' + #days")
     public List<TrendVO> getRegistrationTrend(Integer days) {
         if (days == null) days = 30;
         return buildTrend(days, "user");
     }
 
+    @Cacheable(value = "stats", key = "'activity:' + #period")
     public List<TrendVO> getActivityStats(String period) {
         if (period == null) period = "daily";
         int days = "weekly".equals(period) ? 7 : "monthly".equals(period) ? 30 : 7;
         return buildTrend(days, "activity");
     }
 
+    @Cacheable(value = "stats", key = "'userNoteDist'")
     public List<DistributionVO> getUserNoteDistribution() {
         List<DistributionVO> distribution = new ArrayList<>();
 
@@ -67,16 +71,19 @@ public class AdminStatsService {
         return distribution;
     }
 
+    @Cacheable(value = "stats", key = "'publishTrend:' + #days")
     public List<TrendVO> getPublishTrend(Integer days) {
         if (days == null) days = 30;
         return buildTrend(days, "note");
     }
 
+    @Cacheable(value = "stats", key = "'viewRank:' + #limit")
     public List<NoteVO> getViewRanking(Integer limit) {
         if (limit == null) limit = 20;
         return noteItemMapper.selectTopNotes(limit);
     }
 
+    @Cacheable(value = "stats", key = "'linkTypeStats'")
     public List<DistributionVO> getLinkTypeStats() {
         List<DistributionVO> stats = new ArrayList<>();
 
@@ -100,6 +107,7 @@ public class AdminStatsService {
         return stats;
     }
 
+    @Cacheable(value = "stats", key = "'platformTrends:' + #days")
     public List<TrendVO> getPlatformTrends(Integer days) {
         if (days == null) days = 30;
         return buildTrend(days, "platform");

@@ -11,6 +11,8 @@ import com.note.mapper.UserMapper;
 import com.note.vo.ActiveUserVO;
 import com.note.vo.PageResult;
 import com.note.vo.UserVO;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,7 @@ public class AdminUserService {
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
+    @Cacheable(value = "activeUsers", key = "'list:' + #page + ':' + #size + ':' + (#keyword != null ? #keyword : '') + ':' + (#status != null ? #status : '')")
     public PageResult<ActiveUserVO> listUsers(Integer page, Integer size, String keyword, Integer status) {
         if (page == null) page = 1;
         if (size == null) size = 10;
@@ -56,6 +59,7 @@ public class AdminUserService {
     }
 
     @Transactional
+    @CacheEvict(value = {"activeUsers", "dashboard"}, allEntries = true)
     public void toggleUserStatus(Long userId, Integer status, Long adminId, String adminUsername, String ipAddress) {
         User user = userMapper.selectById(userId);
         if (user == null) {
@@ -78,6 +82,7 @@ public class AdminUserService {
     }
 
     @Transactional
+    @CacheEvict(value = {"activeUsers", "dashboard"}, allEntries = true)
     public void unlockUser(Long userId, Long adminId, String adminUsername, String ipAddress) {
         User user = userMapper.selectById(userId);
         if (user == null) {
@@ -96,6 +101,7 @@ public class AdminUserService {
     }
 
     @Transactional
+    @CacheEvict(value = {"activeUsers"}, allEntries = true)
     public void resetUserPassword(Long userId, Long adminId, String adminUsername, String ipAddress) {
         User user = userMapper.selectById(userId);
         if (user == null) {
@@ -111,6 +117,7 @@ public class AdminUserService {
     }
 
     @Transactional
+    @CacheEvict(value = {"activeUsers", "dashboard"}, allEntries = true)
     public void batchToggleStatus(List<Long> userIds, Integer status, Long adminId, String adminUsername, String ipAddress) {
         for (Long userId : userIds) {
             User user = userMapper.selectById(userId);

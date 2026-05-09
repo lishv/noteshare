@@ -6,6 +6,8 @@ import com.note.mapper.UserMapper;
 import com.note.vo.DashboardVO;
 import com.note.vo.NoteVO;
 import com.note.vo.TrendVO;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,6 +28,7 @@ public class DashboardService {
         this.noteItemMapper = noteItemMapper;
     }
 
+    @Cacheable(value = "dashboard", key = "'overview'")
     public DashboardVO getOverview() {
         DashboardVO vo = new DashboardVO();
 
@@ -51,6 +54,7 @@ public class DashboardService {
         return vo;
     }
 
+    @Cacheable(value = "dashboard", key = "'userTrend:' + #days")
     public List<TrendVO> getUserTrend(Integer days) {
         if (days == null) days = 7;
         List<TrendVO> trends = new ArrayList<>();
@@ -73,6 +77,7 @@ public class DashboardService {
         return trends;
     }
 
+    @Cacheable(value = "dashboard", key = "'noteTrend:' + #days")
     public List<TrendVO> getNoteTrend(Integer days) {
         if (days == null) days = 7;
         List<TrendVO> trends = new ArrayList<>();
@@ -96,6 +101,7 @@ public class DashboardService {
         return trends;
     }
 
+    @Cacheable(value = "dashboard", key = "'topNotes:' + #limit")
     public List<NoteVO> getTopNotes(Integer limit) {
         if (limit == null) limit = 10;
         return noteItemMapper.selectTopNotes(limit);
@@ -104,4 +110,7 @@ public class DashboardService {
     public List<TrendVO> getUserActivity() {
         return getUserTrend(7);
     }
+
+    @CacheEvict(value = "dashboard", allEntries = true)
+    public void clearCache() {}
 }

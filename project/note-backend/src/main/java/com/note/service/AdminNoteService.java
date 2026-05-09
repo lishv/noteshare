@@ -9,6 +9,7 @@ import com.note.mapper.NoteItemMapper;
 import com.note.mapper.OperationLogMapper;
 import com.note.vo.NoteVO;
 import com.note.vo.PageResult;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,7 @@ public class AdminNoteService {
     }
 
     @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
     public void logicalDeleteNote(Long noteId, Long adminId, String adminUsername, String ipAddress) {
         noteItemMapper.logicalDelete(noteId, LocalDateTime.now());
 
@@ -52,6 +54,7 @@ public class AdminNoteService {
     }
 
     @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
     public void restoreNote(Long noteId, Long adminId, String adminUsername, String ipAddress) {
         noteItemMapper.restoreNote(noteId);
 
@@ -60,6 +63,7 @@ public class AdminNoteService {
     }
 
     @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
     public void batchDeleteNotes(List<Long> noteIds, Long adminId, String adminUsername, String ipAddress) {
         for (Long noteId : noteIds) {
             noteItemMapper.logicalDelete(noteId, LocalDateTime.now());
@@ -70,6 +74,7 @@ public class AdminNoteService {
     }
 
     @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
     public void batchRestoreNotes(List<Long> noteIds, Long adminId, String adminUsername, String ipAddress) {
         for (Long noteId : noteIds) {
             noteItemMapper.restoreNote(noteId);

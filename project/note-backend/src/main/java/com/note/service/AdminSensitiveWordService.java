@@ -12,6 +12,7 @@ import com.note.exception.BusinessException;
 import com.note.mapper.OperationLogMapper;
 import com.note.mapper.SensitiveWordMapper;
 import com.note.vo.PageResult;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +64,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void createWord(SensitiveWordDTO dto, Long adminId, String adminUsername, String ipAddress) {
         LambdaQueryWrapper<SensitiveWord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SensitiveWord::getWord, dto.getWord());
@@ -84,6 +86,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void updateWord(Long id, SensitiveWordDTO dto, Long adminId, String adminUsername, String ipAddress) {
         SensitiveWord word = sensitiveWordMapper.selectById(id);
         if (word == null) {
@@ -102,6 +105,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void deleteWord(Long id, Long adminId, String adminUsername, String ipAddress) {
         sensitiveWordMapper.deleteById(id);
         sensitiveWordService.refreshCache();
@@ -111,6 +115,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void toggleWordStatus(Long id, Integer status, Long adminId, String adminUsername, String ipAddress) {
         SensitiveWord word = sensitiveWordMapper.selectById(id);
         if (word == null) {
@@ -125,6 +130,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void batchImport(SensitiveWordBatchDTO dto, Long adminId, String adminUsername, String ipAddress) {
         int type = dto.getType() != null ? dto.getType() : 1;
         for (String w : dto.getWords()) {
@@ -147,6 +153,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void batchDelete(List<Long> ids, Long adminId, String adminUsername, String ipAddress) {
         sensitiveWordMapper.deleteBatchIds(ids);
         sensitiveWordService.refreshCache();
@@ -156,6 +163,7 @@ public class AdminSensitiveWordService {
     }
 
     @Transactional
+    @CacheEvict(value = "stats", allEntries = true)
     public void batchToggleStatus(List<Long> ids, Integer status, Long adminId, String adminUsername, String ipAddress) {
         for (Long id : ids) {
             SensitiveWord word = sensitiveWordMapper.selectById(id);

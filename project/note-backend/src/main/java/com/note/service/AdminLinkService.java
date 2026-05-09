@@ -10,6 +10,7 @@ import com.note.mapper.MainLinkMapper;
 import com.note.mapper.OperationLogMapper;
 import com.note.vo.MainLinkVO;
 import com.note.vo.PageResult;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ public class AdminLinkService {
     }
 
     @Transactional
+    @CacheEvict(value = {"dashboard", "stats"}, allEntries = true)
     public void editLink(Long linkId, String mainUrl, Long adminId, String adminUsername, String ipAddress) {
         MainLink link = mainLinkMapper.selectById(linkId);
         if (link == null) {
@@ -51,6 +53,7 @@ public class AdminLinkService {
     }
 
     @Transactional
+    @CacheEvict(value = {"dashboard", "stats"}, allEntries = true)
     public void deleteLink(Long linkId, Long adminId, String adminUsername, String ipAddress) {
         MainLink link = mainLinkMapper.selectById(linkId);
         if (link == null) {

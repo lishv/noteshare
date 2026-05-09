@@ -1,0 +1,16 @@
+# 多实例集群配置 — 启动时通过 --spring.profiles.active=cluster --server.port=8081 指定端口
+server:
+  port: 8080
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 3
+  data:
+    redis:
+      lettuce:
+        pool:
+          max-active: 30
+          max-idle: 15
+          min-idle: 5
