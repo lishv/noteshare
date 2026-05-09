@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: note-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: L2570410870
+      MYSQL_DATABASE: note_sharing
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./src/main/resources/init_with_test_data.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7-alpine
+    container_name: note-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass L2570410870
+    volumes:
+      - redis-data:/data
+
+  backend:
+    build: .
+    container_name: note-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/note_sharing?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: L2570410870
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_DATABASE: 9
+      SPRING_DATA_REDIS_PASSWORD: L2570410870
+
+volumes:
+  mysql-data:
+  redis-data:

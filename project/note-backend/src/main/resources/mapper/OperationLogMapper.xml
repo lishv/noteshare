@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.note.mapper.OperationLogMapper">
+
+    <select id="selectLogPage" resultType="com.note.vo.OperationLogVO">
+        SELECT id, admin_username AS adminUsername, operation_type AS operationType,
+               description, target_type AS targetType, target_id AS targetId,
+               ip_address AS ipAddress, created_at AS createdAt
+        FROM t_operation_log
+        <where>
+            <if test="operationType != null and operationType != ''">
+                AND operation_type = #{operationType}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND created_at &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND created_at &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>

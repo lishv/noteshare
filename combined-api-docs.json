@@ -1,0 +1,4728 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "笔记共享平台 API（含管理端）",
+    "description": "学生笔记共享平台完整 API 文档，包含用户端和管理端全部接口。用户端使用 Bearer Authentication，管理端使用 AdminBearerAuth。",
+    "contact": {
+      "name": "开发团队",
+      "email": "admin@example.com"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api",
+      "description": "本地开发环境"
+    }
+  ],
+  "tags": [
+    {
+      "name": "用户端/笔记管理",
+      "description": "【用户端】笔记的增删改查相关接口"
+    },
+    {
+      "name": "用户端/认证管理",
+      "description": "【用户端】用户注册、登录相关接口"
+    },
+    {
+      "name": "用户端/用户管理",
+      "description": "【用户端】用户信息管理相关接口"
+    },
+    {
+      "name": "用户端/总链接管理",
+      "description": "【用户端】用户总链接的增删改查相关接口"
+    },
+    {
+      "name": "用户端/搜索管理",
+      "description": "【用户端】全局搜索相关接口"
+    },
+    {
+      "name": "管理端/管理员认证",
+      "description": "【管理端】管理员登录、登出、个人信息、修改密码"
+    },
+    {
+      "name": "管理端/首页仪表盘",
+      "description": "【管理端】数据概览、用户/笔记趋势、排行榜、活跃度"
+    },
+    {
+      "name": "管理端/用户管理",
+      "description": "【管理端】用户列表、详情、禁用/启用、解锁、重置密码、批量操作"
+    },
+    {
+      "name": "管理端/笔记管理",
+      "description": "【管理端】笔记列表、详情、强制删除、恢复、批量操作"
+    },
+    {
+      "name": "管理端/总链接管理",
+      "description": "【管理端】总链接列表、编辑、删除"
+    },
+    {
+      "name": "管理端/敏感词管理",
+      "description": "【管理端】敏感词CRUD、批量导入、批量操作"
+    },
+    {
+      "name": "管理端/数据统计",
+      "description": "【管理端】用户/笔记/平台维度数据统计图表接口"
+    },
+    {
+      "name": "管理端/操作日志",
+      "description": "【管理端】管理员操作日志查询"
+    },
+    {
+      "name": "管理端/管理员管理",
+      "description": "【管理端】管理员账号CRUD、启禁用、重置密码（仅超管）"
+    }
+  ],
+  "paths": {
+    "/users/password": {
+      "put": {
+        "tags": [
+          "用户端/用户管理"
+        ],
+        "summary": "修改密码",
+        "description": "修改当前登录用户的密码",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/{noteId}": {
+      "get": {
+        "tags": [
+          "用户端/笔记管理"
+        ],
+        "summary": "获取笔记详情",
+        "description": "根据ID获取笔记详细信息",
+        "operationId": "getNote",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "description": "笔记ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultNoteVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "用户端/笔记管理"
+        ],
+        "summary": "更新笔记",
+        "description": "更新指定笔记的内容",
+        "operationId": "updateNote",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "description": "笔记ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultNoteVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "用户端/笔记管理"
+        ],
+        "summary": "删除笔记",
+        "description": "删除指定的笔记",
+        "operationId": "deleteNote",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "description": "笔记ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes": {
+      "post": {
+        "tags": [
+          "用户端/笔记管理"
+        ],
+        "summary": "创建笔记",
+        "description": "创建新的笔记内容",
+        "operationId": "createNote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultNoteVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/{noteId}/view": {
+      "post": {
+        "tags": [
+          "用户端/笔记管理"
+        ],
+        "summary": "增加浏览量",
+        "description": "增加指定笔记的浏览量计数",
+        "operationId": "incrementViewCount",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "description": "笔记ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/main-link": {
+      "get": {
+        "tags": [
+          "用户端/总链接管理"
+        ],
+        "summary": "获取我的总链接",
+        "description": "获取当前登录用户的主链接信息",
+        "operationId": "getMyMainLink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMainLinkVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "用户端/总链接管理"
+        ],
+        "summary": "设置总链接",
+        "description": "设置或更新用户的主链接地址",
+        "operationId": "setMainLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MainLinkDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMainLinkVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "用户端/总链接管理"
+        ],
+        "summary": "删除总链接",
+        "description": "删除当前登录用户的主链接",
+        "operationId": "deleteMainLink",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "用户端/认证管理"
+        ],
+        "summary": "用户注册",
+        "description": "新用户注册账号",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLoginVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "用户端/认证管理"
+        ],
+        "summary": "用户登录",
+        "description": "用户登录获取JWT令牌",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLoginVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/api-docs": {
+      "get": {
+        "tags": [
+          "open-api-controller"
+        ],
+        "operationId": "apiDocs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/current": {
+      "get": {
+        "tags": [
+          "用户端/用户管理"
+        ],
+        "summary": "获取当前用户信息",
+        "description": "获取当前登录用户的详细信息",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/active": {
+      "get": {
+        "tags": [
+          "用户端/用户管理"
+        ],
+        "summary": "获取活跃用户列表",
+        "description": "分页获取活跃用户列表",
+        "operationId": "getActiveUsers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页大小",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "搜索关键词",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultActiveUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "tags": [
+          "用户端/搜索管理"
+        ],
+        "summary": "全局搜索",
+        "description": "搜索用户和笔记内容",
+        "operationId": "search",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "搜索关键词",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页大小",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSearchVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/user/{userId}": {
+      "get": {
+        "tags": [
+          "用户端/笔记管理"
+        ],
+        "summary": "获取用户笔记列表",
+        "description": "分页获取指定用户的笔记列表",
+        "operationId": "getUserNotes",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页大小",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultNoteVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/main-link/{userId}": {
+      "get": {
+        "tags": [
+          "用户端/总链接管理"
+        ],
+        "summary": "获取用户总链接",
+        "description": "获取指定用户的主链接信息",
+        "operationId": "getMainLink",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultMainLinkVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/openapi.json": {
+      "get": {
+        "tags": [
+          "api-doc-controller"
+        ],
+        "operationId": "getOpenApiDoc",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "tags": [
+          "管理端/管理员认证"
+        ],
+        "summary": "管理员登录",
+        "description": "使用用户名+密码登录，返回JWT Token。登录失败5次锁定10分钟。默认密码登录时返回mustChangePassword=true。",
+        "operationId": "adminLogin",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultAdminLoginVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/auth/logout": {
+      "post": {
+        "tags": [
+          "管理端/管理员认证"
+        ],
+        "summary": "管理员登出",
+        "description": "登出当前管理员账号",
+        "operationId": "adminLogout",
+        "responses": {
+          "200": {
+            "description": "登出成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/auth/profile": {
+      "get": {
+        "tags": [
+          "管理端/管理员认证"
+        ],
+        "summary": "获取当前管理员信息",
+        "description": "获取当前登录管理员的详细信息",
+        "operationId": "adminProfile",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultAdminVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/auth/password": {
+      "put": {
+        "tags": [
+          "管理端/管理员认证"
+        ],
+        "summary": "修改密码",
+        "description": "修改当前管理员密码",
+        "operationId": "adminChangePassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminChangePasswordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "密码修改成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard/overview": {
+      "get": {
+        "tags": [
+          "管理端/首页仪表盘"
+        ],
+        "summary": "数据概览",
+        "description": "获取总用户数、总笔记数、总浏览量、活跃用户数及今日新增数据",
+        "operationId": "dashboardOverview",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultDashboardOverviewVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard/user-trend": {
+      "get": {
+        "tags": [
+          "管理端/首页仪表盘"
+        ],
+        "summary": "用户注册趋势",
+        "description": "用户注册趋势折线图数据，可选7/30/90天",
+        "operationId": "dashboardUserTrend",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "description": "天数",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                7,
+                30,
+                90
+              ],
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTrendVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard/note-trend": {
+      "get": {
+        "tags": [
+          "管理端/首页仪表盘"
+        ],
+        "summary": "笔记发布趋势",
+        "description": "笔记发布趋势折线图数据，可选7/30/90天",
+        "operationId": "dashboardNoteTrend",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "description": "天数",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                7,
+                30,
+                90
+              ],
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTrendVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard/top-notes": {
+      "get": {
+        "tags": [
+          "管理端/首页仪表盘"
+        ],
+        "summary": "浏览量Top笔记排行",
+        "description": "获取浏览量排行前N的笔记",
+        "operationId": "dashboardTopNotes",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "排行数量",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTopNoteListVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard/user-activity": {
+      "get": {
+        "tags": [
+          "管理端/首页仪表盘"
+        ],
+        "summary": "用户活跃度分布",
+        "description": "获取用户活跃度分布饼图数据（活跃/7天未活跃/30天未活跃）",
+        "operationId": "dashboardUserActivity",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultUserActivityVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "管理端/用户管理"
+        ],
+        "summary": "用户列表",
+        "description": "分页获取用户列表，支持按用户名/邮箱模糊搜索和状态筛选",
+        "operationId": "adminUserList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "每页条数",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "按用户名/邮箱模糊搜索",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "状态筛选：1-正常，0-禁用，2-锁定",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1,
+                2
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultAdminUserVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}": {
+      "get": {
+        "tags": [
+          "管理端/用户管理"
+        ],
+        "summary": "用户详情",
+        "description": "获取用户详细信息，包含笔记列表和总链接",
+        "operationId": "adminUserDetail",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultAdminUserDetailVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/status": {
+      "put": {
+        "tags": [
+          "管理端/用户管理"
+        ],
+        "summary": "禁用/启用用户",
+        "description": "修改用户状态，禁用时同步Redis黑名单使该用户Token立即失效",
+        "operationId": "adminUserStatus",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/unlock": {
+      "post": {
+        "tags": [
+          "管理端/用户管理"
+        ],
+        "summary": "解锁用户",
+        "description": "将锁定状态的用户恢复为正常，清除登录失败记录",
+        "operationId": "adminUserUnlock",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "解锁成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/reset-password": {
+      "put": {
+        "tags": [
+          "管理端/用户管理"
+        ],
+        "summary": "重置用户密码",
+        "description": "将用户密码重置为默认密码，并通过邮件通知用户",
+        "operationId": "adminUserResetPassword",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "用户ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "重置成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/batch/status": {
+      "put": {
+        "tags": [
+          "管理端/用户管理"
+        ],
+        "summary": "批量禁用/启用用户",
+        "description": "批量修改用户状态",
+        "operationId": "adminUserBatchStatus",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchStatusDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBatchResultVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/notes": {
+      "get": {
+        "tags": [
+          "管理端/笔记管理"
+        ],
+        "summary": "笔记列表",
+        "description": "分页获取笔记列表，支持按标题/用户名模糊搜索、状态筛选、用户ID筛选",
+        "operationId": "adminNoteList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "按标题/用户名模糊搜索",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "状态：1-正常，0-已删除",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "按用户ID筛选",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultAdminNoteVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/notes/{noteId}": {
+      "get": {
+        "tags": [
+          "管理端/笔记管理"
+        ],
+        "summary": "笔记详情",
+        "description": "获取笔记详细信息",
+        "operationId": "adminNoteDetail",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultAdminNoteDetailVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/notes/{noteId}/delete": {
+      "put": {
+        "tags": [
+          "管理端/笔记管理"
+        ],
+        "summary": "强制删除笔记（逻辑删除）",
+        "description": "管理员强制逻辑删除笔记，将status改为0。使用PUT表示状态变更。",
+        "operationId": "adminNoteDelete",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/notes/{noteId}/restore": {
+      "put": {
+        "tags": [
+          "管理端/笔记管理"
+        ],
+        "summary": "恢复笔记",
+        "description": "将逻辑删除的笔记恢复为正常状态",
+        "operationId": "adminNoteRestore",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "恢复成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/notes/batch/delete": {
+      "put": {
+        "tags": [
+          "管理端/笔记管理"
+        ],
+        "summary": "批量删除笔记",
+        "description": "批量逻辑删除笔记",
+        "operationId": "adminNoteBatchDelete",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIdsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBatchResultVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/notes/batch/restore": {
+      "put": {
+        "tags": [
+          "管理端/笔记管理"
+        ],
+        "summary": "批量恢复笔记",
+        "description": "批量恢复已逻辑删除的笔记",
+        "operationId": "adminNoteBatchRestore",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIdsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBatchResultVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/links": {
+      "get": {
+        "tags": [
+          "管理端/总链接管理"
+        ],
+        "summary": "总链接列表",
+        "description": "分页获取总链接列表，支持按用户名/链接内容模糊搜索",
+        "operationId": "adminLinkList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "按用户名/链接内容模糊搜索",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultAdminLinkVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/links/{linkId}": {
+      "put": {
+        "tags": [
+          "管理端/总链接管理"
+        ],
+        "summary": "编辑总链接",
+        "description": "修改指定总链接的URL",
+        "operationId": "adminLinkUpdate",
+        "parameters": [
+          {
+            "name": "linkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLinkUpdateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "管理端/总链接管理"
+        ],
+        "summary": "删除总链接",
+        "description": "删除指定的总链接",
+        "operationId": "adminLinkDelete",
+        "parameters": [
+          {
+            "name": "linkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/words": {
+      "get": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "敏感词列表",
+        "description": "分页获取敏感词列表，支持按内容模糊搜索、分类筛选、状态筛选",
+        "operationId": "adminWordList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "按敏感词内容模糊搜索",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "分类筛选",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "POLITICS",
+                "PORNOGRAPHY",
+                "VIOLENCE",
+                "ADVERTISEMENT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "状态筛选：1-启用，0-禁用",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultSensitiveWordVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "新增敏感词",
+        "description": "新增敏感词，新增后同步更新Redis缓存",
+        "operationId": "adminWordCreate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensitiveWordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultSensitiveWordVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/words/{wordId}": {
+      "put": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "修改敏感词",
+        "description": "修改敏感词内容或分类，修改后同步更新Redis缓存",
+        "operationId": "adminWordUpdate",
+        "parameters": [
+          {
+            "name": "wordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensitiveWordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "删除敏感词",
+        "description": "删除敏感词，删除后同步更新Redis缓存",
+        "operationId": "adminWordDelete",
+        "parameters": [
+          {
+            "name": "wordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/words/{wordId}/status": {
+      "put": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "启用/禁用敏感词",
+        "description": "切换敏感词的启用/禁用状态，变更后同步更新Redis缓存",
+        "operationId": "adminWordStatus",
+        "parameters": [
+          {
+            "name": "wordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/words/batch-import": {
+      "post": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "批量导入敏感词",
+        "description": "批量导入敏感词，已存在的敏感词会跳过",
+        "operationId": "adminWordBatchImport",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchImportWordsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "导入结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBatchImportVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/words/batch": {
+      "delete": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "批量删除敏感词",
+        "description": "批量删除敏感词",
+        "operationId": "adminWordBatchDelete",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIdsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBatchResultVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/words/batch/status": {
+      "put": {
+        "tags": [
+          "管理端/敏感词管理"
+        ],
+        "summary": "批量启用/禁用敏感词",
+        "description": "批量切换敏感词的启用/禁用状态",
+        "operationId": "adminWordBatchStatus",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchStatusDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultBatchResultVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/user-registration-trend": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "用户注册趋势",
+        "description": "用户注册趋势折线图数据",
+        "operationId": "statsUserRegistrationTrend",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                7,
+                30,
+                90
+              ],
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTrendVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/user-activity": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "用户活跃度统计",
+        "description": "用户活跃度柱状图数据，支持按日/周/月统计",
+        "operationId": "statsUserActivity",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "daily",
+                "weekly",
+                "monthly"
+              ],
+              "default": "daily"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultStatsUserActivityVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/user-note-distribution": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "用户笔记数量分布",
+        "description": "用户按笔记数量分段的分布柱状图（0篇/1-5篇/6-10篇/10篇以上）",
+        "operationId": "statsUserNoteDistribution",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultDistributionListVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/note-publish-trend": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "笔记发布趋势",
+        "description": "笔记发布趋势折线图数据",
+        "operationId": "statsNotePublishTrend",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                7,
+                30,
+                90
+              ],
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultTrendVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/note-view-ranking": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "笔记浏览量排行Top20",
+        "description": "笔记浏览量排行前20的水平柱状图数据",
+        "operationId": "statsNoteViewRanking",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultNoteRankingListVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/note-link-type": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "笔记链接类型占比",
+        "description": "笔记链接类型占比饼图数据（URL链接 vs 相对位置文本）",
+        "operationId": "statsNoteLinkType",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultLinkTypeListVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats/platform-trend": {
+      "get": {
+        "tags": [
+          "管理端/数据统计"
+        ],
+        "summary": "平台数据总趋势",
+        "description": "平台数据总趋势面积图，叠加用户数+笔记数+浏览量",
+        "operationId": "statsPlatformTrend",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                7,
+                30,
+                90
+              ],
+              "default": 7
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPlatformTrendVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/logs": {
+      "get": {
+        "tags": [
+          "管理端/操作日志"
+        ],
+        "summary": "操作日志列表",
+        "description": "分页获取操作日志列表，支持按操作人、操作类型、时间范围筛选。日志保留90天自动清理。",
+        "operationId": "adminLogList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "operator",
+            "in": "query",
+            "description": "按操作人用户名搜索",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "operationType",
+            "in": "query",
+            "description": "操作类型",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LOGIN",
+                "USER_MANAGE",
+                "NOTE_MANAGE",
+                "LINK_MANAGE",
+                "WORD_MANAGE",
+                "ADMIN_MANAGE"
+              ]
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "开始时间 yyyy-MM-dd",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "结束时间 yyyy-MM-dd",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultOperationLogVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/admins": {
+      "get": {
+        "tags": [
+          "管理端/管理员管理"
+        ],
+        "summary": "管理员列表",
+        "description": "获取管理员列表，仅超级管理员可访问",
+        "operationId": "adminAdminList",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultPageResultAdminManageVO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "管理端/管理员管理"
+        ],
+        "summary": "新增管理员",
+        "description": "创建新管理员账号，仅超级管理员可访问",
+        "operationId": "adminAdminCreate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultAdminManageVO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/admins/{adminId}": {
+      "put": {
+        "tags": [
+          "管理端/管理员管理"
+        ],
+        "summary": "编辑管理员",
+        "description": "编辑管理员邮箱和角色，仅超级管理员可访问。不能操作自己，不能降级最后一个超管。",
+        "operationId": "adminAdminUpdate",
+        "parameters": [
+          {
+            "name": "adminId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/admins/{adminId}/status": {
+      "put": {
+        "tags": [
+          "管理端/管理员管理"
+        ],
+        "summary": "启用/禁用管理员",
+        "description": "启用或禁用管理员账号，仅超级管理员可访问。不能禁用自己，不能禁用最后一个超管。",
+        "operationId": "adminAdminStatus",
+        "parameters": [
+          {
+            "name": "adminId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/admins/{adminId}/reset-password": {
+      "put": {
+        "tags": [
+          "管理端/管理员管理"
+        ],
+        "summary": "重置管理员密码",
+        "description": "将管理员密码重置为默认密码并通过邮件通知，仅超级管理员可访问。不能重置自己。",
+        "operationId": "adminAdminResetPassword",
+        "parameters": [
+          {
+            "name": "adminId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "重置成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer Authentication": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "AdminBearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "管理端JWT Token，使用独立密钥jwt.admin.secret，有效期24小时"
+      }
+    },
+    "schemas": {
+      "ChangePasswordDTO": {
+        "required": [
+          "newPassword",
+          "oldPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "description": "旧密码",
+            "example": "oldpass123"
+          },
+          "newPassword": {
+            "maxLength": 100,
+            "minLength": 6,
+            "type": "string",
+            "description": "新密码",
+            "example": "newpass123"
+          }
+        },
+        "description": "修改密码请求参数"
+      },
+      "ResultVoid": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "description": "状态码",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "提示信息",
+            "example": "操作成功"
+          },
+          "data": {
+            "type": "object",
+            "description": "响应数据"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "时间戳(毫秒)",
+            "example": 1713744000000
+          }
+        }
+      },
+      "NoteDTO": {
+        "required": [
+          "locationOrUrl",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "笔记名称",
+            "example": "Java基础笔记"
+          },
+          "locationOrUrl": {
+            "type": "string",
+            "description": "链接或位置",
+            "example": "https://example.com/note"
+          }
+        },
+        "description": "笔记请求参数"
+      },
+      "NoteVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "笔记ID",
+            "format": "int64",
+            "example": 1
+          },
+          "userId": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "testuser"
+          },
+          "title": {
+            "type": "string",
+            "description": "笔记标题",
+            "example": "Java基础笔记"
+          },
+          "locationOrUrl": {
+            "type": "string",
+            "description": "链接或位置",
+            "example": "https://example.com/note"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "浏览量",
+            "format": "int64",
+            "example": 10
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间",
+            "format": "date-time"
+          }
+        },
+        "description": "笔记信息响应数据"
+      },
+      "ResultNoteVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/NoteVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "MainLinkDTO": {
+        "required": [
+          "mainUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "mainUrl": {
+            "type": "string",
+            "description": "总链接URL",
+            "example": "https://notion.so/username"
+          }
+        },
+        "description": "总链接请求参数"
+      },
+      "MainLinkVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "总链接ID",
+            "format": "int64",
+            "example": 1
+          },
+          "userId": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64",
+            "example": 1
+          },
+          "mainUrl": {
+            "type": "string",
+            "description": "总链接URL",
+            "example": "https://notion.so/username"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "浏览量",
+            "format": "int64",
+            "example": 5
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "更新时间",
+            "format": "date-time"
+          }
+        },
+        "description": "总链接响应数据"
+      },
+      "ResultMainLinkVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MainLinkVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "RegisterDTO": {
+        "required": [
+          "email",
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "maxLength": 50,
+            "minLength": 2,
+            "type": "string",
+            "description": "用户名",
+            "example": "testuser"
+          },
+          "password": {
+            "maxLength": 100,
+            "minLength": 6,
+            "type": "string",
+            "description": "密码",
+            "example": "testpass123"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "test@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号",
+            "example": "13800138000"
+          }
+        },
+        "description": "注册请求参数"
+      },
+      "LoginVO": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT令牌",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserVO"
+          }
+        },
+        "description": "登录响应数据"
+      },
+      "ResultLoginVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LoginVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "UserVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "testuser"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "test@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号",
+            "example": "13800138000"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "description": "最后活跃时间",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "创建时间",
+            "format": "date-time"
+          }
+        },
+        "description": "用户信息响应数据"
+      },
+      "LoginDTO": {
+        "required": [
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "testuser"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "testpass123"
+          }
+        },
+        "description": "登录请求参数"
+      },
+      "ResultUserVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "ActiveUserVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "用户ID",
+            "format": "int64",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "testuser"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "description": "最后活跃时间",
+            "format": "date-time"
+          },
+          "hasMainLink": {
+            "type": "boolean",
+            "description": "是否有总链接",
+            "example": true
+          },
+          "noteCount": {
+            "type": "integer",
+            "description": "笔记数量",
+            "format": "int32",
+            "example": 5
+          }
+        },
+        "description": "活跃用户响应数据"
+      },
+      "PageResultActiveUserVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "总记录数",
+            "format": "int64",
+            "example": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "当前页码",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "description": "每页大小",
+            "format": "int32",
+            "example": 10
+          },
+          "list": {
+            "type": "array",
+            "description": "数据列表",
+            "items": {
+              "$ref": "#/components/schemas/ActiveUserVO"
+            }
+          }
+        },
+        "description": "分页响应数据"
+      },
+      "ResultPageResultActiveUserVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultActiveUserVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "ResultSearchVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SearchVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "SearchVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "总记录数",
+            "format": "int64",
+            "example": 20
+          },
+          "page": {
+            "type": "integer",
+            "description": "当前页码",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "description": "每页大小",
+            "format": "int32",
+            "example": 10
+          },
+          "users": {
+            "type": "array",
+            "description": "用户列表",
+            "items": {
+              "$ref": "#/components/schemas/ActiveUserVO"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "description": "笔记列表",
+            "items": {
+              "$ref": "#/components/schemas/NoteVO"
+            }
+          }
+        },
+        "description": "搜索响应数据"
+      },
+      "PageResultNoteVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "总记录数",
+            "format": "int64",
+            "example": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "当前页码",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "description": "每页大小",
+            "format": "int32",
+            "example": 10
+          },
+          "list": {
+            "type": "array",
+            "description": "数据列表",
+            "items": {
+              "$ref": "#/components/schemas/NoteVO"
+            }
+          }
+        },
+        "description": "分页响应数据"
+      },
+      "ResultPageResultNoteVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "description": "消息",
+            "example": "操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultNoteVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "时间戳",
+            "format": "int64",
+            "example": 1642678800000
+          }
+        },
+        "description": "统一响应结果"
+      },
+      "AdminLoginDTO": {
+        "required": [
+          "username",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "管理员用户名",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "admin123"
+          }
+        }
+      },
+      "AdminChangePasswordDTO": {
+        "required": [
+          "oldPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "description": "当前密码",
+            "example": "admin123"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 100,
+            "description": "新密码",
+            "example": "NewPass@2024"
+          }
+        }
+      },
+      "StatusDTO": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "目标状态：1-启用，0-禁用",
+            "enum": [
+              0,
+              1
+            ],
+            "example": 0
+          }
+        }
+      },
+      "BatchIdsDTO": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "noteIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "ID列表"
+          }
+        }
+      },
+      "BatchStatusDTO": {
+        "required": [
+          "ids",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "ID列表"
+          },
+          "wordIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "ID列表"
+          },
+          "status": {
+            "type": "integer",
+            "description": "目标状态：1-启用，0-禁用",
+            "enum": [
+              0,
+              1
+            ],
+            "example": 0
+          }
+        }
+      },
+      "AdminLinkUpdateDTO": {
+        "required": [
+          "mainUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "mainUrl": {
+            "type": "string",
+            "description": "新的总链接URL",
+            "example": "https://notion.so/zhangsan-new"
+          }
+        }
+      },
+      "SensitiveWordDTO": {
+        "required": [
+          "word",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "word": {
+            "type": "string",
+            "description": "敏感词内容",
+            "example": "违禁词"
+          },
+          "type": {
+            "type": "string",
+            "description": "分类",
+            "enum": [
+              "POLITICS",
+              "PORNOGRAPHY",
+              "VIOLENCE",
+              "VERTISEMENT"
+            ],
+            "example": "POLITICS"
+          }
+        }
+      },
+      "BatchImportWordsDTO": {
+        "required": [
+          "words"
+        ],
+        "type": "object",
+        "properties": {
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SensitiveWordDTO"
+            },
+            "description": "敏感词列表"
+          }
+        }
+      },
+      "AdminCreateDTO": {
+        "required": [
+          "username",
+          "password",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "description": "管理员用户名",
+            "example": "operator02"
+          },
+          "password": {
+            "type": "string",
+            "description": "初始密码",
+            "example": "SecurePass@2024"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "operator02@example.com"
+          },
+          "role": {
+            "type": "integer",
+            "description": "角色：1-超级管理员，2-普通管理员",
+            "enum": [
+              1,
+              2
+            ],
+            "example": 2
+          }
+        }
+      },
+      "AdminUpdateDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "新邮箱",
+            "example": "newemail@example.com"
+          },
+          "role": {
+            "type": "integer",
+            "description": "新角色：1-超级管理员，2-普通管理员",
+            "enum": [
+              1,
+              2
+            ],
+            "example": 2
+          }
+        }
+      },
+      "AdminLoginVO": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "管理端JWT Token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "admin": {
+            "$ref": "#/components/schemas/AdminVO"
+          },
+          "mustChangePassword": {
+            "type": "boolean",
+            "description": "是否需要强制修改默认密码",
+            "example": false
+          }
+        }
+      },
+      "ResultAdminLoginVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "登录成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminLoginVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "管理员ID",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "admin"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "admin@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号",
+            "example": "13800138000"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "role": {
+            "type": "integer",
+            "description": "角色：1-超级管理员，2-普通管理员",
+            "enum": [
+              1,
+              2
+            ],
+            "example": 1
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态：1-正常，0-禁用",
+            "enum": [
+              0,
+              1
+            ],
+            "example": 1
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "最后登录时间"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          }
+        }
+      },
+      "ResultAdminVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "DashboardOverviewVO": {
+        "type": "object",
+        "properties": {
+          "totalUsers": {
+            "type": "integer",
+            "format": "int64",
+            "description": "总用户数",
+            "example": 12580
+          },
+          "todayNewUsers": {
+            "type": "integer",
+            "format": "int64",
+            "description": "今日新增用户",
+            "example": 42
+          },
+          "totalNotes": {
+            "type": "integer",
+            "format": "int64",
+            "description": "总笔记数",
+            "example": 34560
+          },
+          "todayNewNotes": {
+            "type": "integer",
+            "format": "int64",
+            "description": "今日新增笔记",
+            "example": 128
+          },
+          "totalViews": {
+            "type": "integer",
+            "format": "int64",
+            "description": "总浏览量",
+            "example": 890500
+          },
+          "todayViews": {
+            "type": "integer",
+            "format": "int64",
+            "description": "今日浏览量",
+            "example": 5620
+          },
+          "activeUsers": {
+            "type": "integer",
+            "format": "int64",
+            "description": "活跃用户数（近7天）",
+            "example": 3250
+          }
+        }
+      },
+      "ResultDashboardOverviewVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DashboardOverviewVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "TrendItemVO": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "日期",
+            "example": "2024-04-22"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "数量",
+            "example": 42
+          }
+        }
+      },
+      "TrendVO": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer",
+            "description": "天数",
+            "example": 7
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendItemVO"
+            }
+          }
+        }
+      },
+      "ResultTrendVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TrendVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "TopNoteVO": {
+        "type": "object",
+        "properties": {
+          "noteId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "笔记ID",
+            "example": 156
+          },
+          "title": {
+            "type": "string",
+            "description": "笔记标题",
+            "example": "高等数学期末复习笔记"
+          },
+          "author": {
+            "type": "string",
+            "description": "作者",
+            "example": "张三"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "浏览量",
+            "example": 5680
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "发布时间"
+          }
+        }
+      },
+      "ResultTopNoteListVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopNoteVO"
+            }
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "UserActivityVO": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "integer",
+            "format": "int64",
+            "description": "活跃用户（7天内有活动）",
+            "example": 3250
+          },
+          "inactive7d": {
+            "type": "integer",
+            "format": "int64",
+            "description": "7天未活跃",
+            "example": 2100
+          },
+          "inactive30d": {
+            "type": "integer",
+            "format": "int64",
+            "description": "30天未活跃",
+            "example": 7230
+          }
+        }
+      },
+      "ResultUserActivityVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserActivityVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminUserVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "用户ID",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "张三"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "zhangsan@example.com"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态：1-正常，0-禁用，2-锁定",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "example": 1
+          },
+          "noteCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "笔记数量",
+            "example": 15
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "最后活跃时间"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "注册时间"
+          }
+        }
+      },
+      "PageResultAdminUserVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "description": "总记录数",
+            "example": 100
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "当前页码",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "每页条数",
+            "example": 20
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserVO"
+            }
+          }
+        }
+      },
+      "ResultPageResultAdminUserVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultAdminUserVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminUserNoteVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 101
+          },
+          "title": {
+            "type": "string",
+            "example": "高等数学期末复习笔记"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 568
+          },
+          "status": {
+            "type": "integer",
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminUserMainLinkVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5
+          },
+          "mainUrl": {
+            "type": "string",
+            "example": "https://notion.so/zhangsan"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 230
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminUserDetailVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "张三"
+          },
+          "email": {
+            "type": "string",
+            "example": "zhangsan@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "13800138000"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "example": 1
+          },
+          "noteCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 15
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserNoteVO"
+            }
+          },
+          "mainLink": {
+            "$ref": "#/components/schemas/AdminUserMainLinkVO"
+          }
+        }
+      },
+      "ResultAdminUserDetailVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminUserDetailVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "BatchResultVO": {
+        "type": "object",
+        "properties": {
+          "successCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "成功数量",
+            "example": 5
+          },
+          "failCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "失败数量",
+            "example": 0
+          },
+          "failIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "失败的ID列表"
+          }
+        }
+      },
+      "ResultBatchResultVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "批量操作成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/BatchResultVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminNoteVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "笔记ID",
+            "example": 156
+          },
+          "title": {
+            "type": "string",
+            "description": "笔记标题",
+            "example": "高等数学期末复习笔记"
+          },
+          "username": {
+            "type": "string",
+            "description": "所属用户",
+            "example": "张三"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "用户ID",
+            "example": 1
+          },
+          "linkOrPosition": {
+            "type": "string",
+            "description": "链接或位置"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "浏览量",
+            "example": 5680
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态：1-正常，0-已删除",
+            "enum": [
+              0,
+              1
+            ],
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageResultAdminNoteVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 256
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminNoteVO"
+            }
+          }
+        }
+      },
+      "ResultPageResultAdminNoteVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultAdminNoteVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminNoteDetailVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 156
+          },
+          "title": {
+            "type": "string",
+            "example": "高等数学期末复习笔记"
+          },
+          "content": {
+            "type": "string",
+            "description": "笔记正文"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "张三"
+          },
+          "linkOrPosition": {
+            "type": "string"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5680
+          },
+          "status": {
+            "type": "integer",
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResultAdminNoteDetailVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminNoteDetailVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminLinkVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "example": "张三"
+          },
+          "mainUrl": {
+            "type": "string",
+            "example": "https://notion.so/zhangsan"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 230
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageResultAdminLinkVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 85
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminLinkVO"
+            }
+          }
+        }
+      },
+      "ResultPageResultAdminLinkVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultAdminLinkVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "SensitiveWordVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1
+          },
+          "word": {
+            "type": "string",
+            "description": "敏感词内容",
+            "example": "赌博"
+          },
+          "type": {
+            "type": "string",
+            "description": "分类",
+            "enum": [
+              "POLITICS",
+              "PORNOGRAPHY",
+              "VIOLENCE",
+              "ADVERTISEMENT"
+            ],
+            "example": "ADVERTISEMENT"
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态：1-启用，0-禁用",
+            "enum": [
+              0,
+              1
+            ],
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PageResultSensitiveWordVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 256
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SensitiveWordVO"
+            }
+          }
+        }
+      },
+      "ResultPageResultSensitiveWordVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultSensitiveWordVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "ResultSensitiveWordVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "敏感词添加成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SensitiveWordVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "BatchImportVO": {
+        "type": "object",
+        "properties": {
+          "successCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 3
+          },
+          "failCount": {
+            "type": "integer",
+            "format": "int32",
+            "example": 0
+          },
+          "existWords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "已存在的敏感词列表"
+          }
+        }
+      },
+      "ResultBatchImportVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "批量导入完成"
+          },
+          "data": {
+            "$ref": "#/components/schemas/BatchImportVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "StatsUserActivityItemVO": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "周期标签",
+            "example": "第16周"
+          },
+          "activeCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1350
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 12580
+          }
+        }
+      },
+      "StatsUserActivityVO": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "example": "weekly"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatsUserActivityItemVO"
+            }
+          }
+        }
+      },
+      "ResultStatsUserActivityVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/StatsUserActivityVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "DistributionItemVO": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "description": "分段标签",
+            "example": "1-5篇"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "example": 4200
+          }
+        }
+      },
+      "ResultDistributionListVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DistributionItemVO"
+            }
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "NoteRankingVO": {
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "noteId": {
+            "type": "integer",
+            "format": "int64",
+            "example": 156
+          },
+          "title": {
+            "type": "string",
+            "example": "高等数学期末复习笔记"
+          },
+          "author": {
+            "type": "string",
+            "example": "张三"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5680
+          }
+        }
+      },
+      "ResultNoteRankingListVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteRankingVO"
+            }
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "LinkTypeVO": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "URL链接"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "example": 22500
+          }
+        }
+      },
+      "ResultLinkTypeListVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkTypeVO"
+            }
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "PlatformTrendItemVO": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2024-04-22"
+          },
+          "userCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 12580
+          },
+          "noteCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 34560
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64",
+            "example": 31200
+          }
+        }
+      },
+      "PlatformTrendVO": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer",
+            "example": 30
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformTrendItemVO"
+            }
+          }
+        }
+      },
+      "ResultPlatformTrendVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PlatformTrendVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "OperationLogVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "日志ID",
+            "example": 1520
+          },
+          "adminId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "操作管理员ID",
+            "example": 1
+          },
+          "adminUsername": {
+            "type": "string",
+            "description": "操作管理员用户名",
+            "example": "admin"
+          },
+          "operationType": {
+            "type": "string",
+            "description": "操作类型",
+            "enum": [
+              "LOGIN",
+              "USER_MANAGE",
+              "NOTE_MANAGE",
+              "LINK_MANAGE",
+              "WORD_MANAGE",
+              "ADMIN_MANAGE"
+            ],
+            "example": "USER_MANAGE"
+          },
+          "description": {
+            "type": "string",
+            "description": "操作描述",
+            "example": "禁用用户：张三"
+          },
+          "detail": {
+            "type": "string",
+            "description": "操作详情/附加信息"
+          },
+          "targetType": {
+            "type": "string",
+            "description": "操作对象类型",
+            "enum": [
+              "USER",
+              "NOTE",
+              "MAIN_LINK",
+              "SENSITIVE_WORD",
+              "ADMIN"
+            ]
+          },
+          "targetId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "操作对象ID"
+          },
+          "ipAddress": {
+            "type": "string",
+            "description": "IP地址",
+            "example": "192.168.1.100"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "操作时间"
+          }
+        }
+      },
+      "PageResultOperationLogVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1520
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperationLogVO"
+            }
+          }
+        }
+      },
+      "ResultPageResultOperationLogVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultOperationLogVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "AdminManageVO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "管理员ID",
+            "example": 1
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "admin"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "admin@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "role": {
+            "type": "integer",
+            "description": "角色：1-超级管理员，2-普通管理员",
+            "enum": [
+              1,
+              2
+            ],
+            "example": 1
+          },
+          "status": {
+            "type": "integer",
+            "description": "状态：1-正常，0-禁用",
+            "enum": [
+              0,
+              1
+            ],
+            "example": 1
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "最后登录时间"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          }
+        }
+      },
+      "PageResultAdminManageVO": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "example": 1
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "example": 20
+          },
+          "list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminManageVO"
+            }
+          }
+        }
+      },
+      "ResultPageResultAdminManageVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResultAdminManageVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      },
+      "ResultAdminManageVO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "管理员创建成功"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AdminManageVO"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1713744000000
+          }
+        }
+      }
+    }
+  }
+}

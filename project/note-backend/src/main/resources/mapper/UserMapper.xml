@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.note.mapper.UserMapper">
+
+    <select id="searchUsers" resultType="com.note.vo.ActiveUserVO">
+        SELECT
+            u.id,
+            u.username,
+            u.avatar,
+            u.last_active_at,
+            COALESCE((SELECT COUNT(1) FROM t_note_item n WHERE n.user_id = u.id AND n.is_deleted = 0), 0) AS noteCount,
+            (SELECT COUNT(1) FROM t_main_link m WHERE m.user_id = u.id) > 0 AS hasMainLink
+        FROM t_user u
+        WHERE u.status = 1
+        <if test="keyword != null and keyword != ''">
+            AND u.username LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY u.last_active_at DESC
+    </select>
+
+</mapper>
