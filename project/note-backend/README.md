@@ -1,200 +1,206 @@
 # 学生笔记共享平台 - 后端服务
 
-#用户端 #账号: zhangsan #密码: password123 或1234 #管理端超级管理员数据
+## 账号信息
 
-# 默认账号: admin
-
-# 默认密码: admin123
-
-#更改后的密码:L2570410870
-
-#直接双击项目根目录下的 start.bat 文件，它会自动执行上述步骤。
-
-<!-- 启动应用后，访问以下地址查看文档：
- 用户端前端 http://localhost:5173、后端 API http://localhost:8080/api、Swagger 文档等
-
-端点	URL	状态
-Swagger UI	http://localhost:8080/api/swagger-ui/index.html
-Swagger UI (快捷)	http://localhost:8080/api/swagger-ui.html	重定向到上面
-OpenAPI JSON	http://localhost:8080/api/openapi.json	即可获得完整的 API 文档
-可以将返回的 JSON 内容复制到 Apifox 或其他 API 工具中使用 -->
+| 角色 | 用户名 | 默认密码 |
+|------|--------|---------|
+| 用户端 | 自行注册 | - |
+| 管理端超管 | admin | admin123（首次登录需修改） |
 
 ## 项目结构
 
 ```
-note-backend/
-├── src/main/java/com/note/
-│   ├── NoteApplication.java          # 应用入口
-│   ├── config/                        # 配置类
-│   │   ├── WebConfig.java            # Web MVC 配置（拦截器）
-│   │   └── MybatisPlusConfig.java    # MyBatis-Plus 分页配置
-│   ├── controller/                    # 控制器层
-│   │   ├── AuthController.java       # 认证接口
-│   │   ├── UserController.java       # 用户接口
-│   │   ├── MainLinkController.java   # 总链接接口
-│   │   ├── NoteController.java       # 笔记接口
-│   │   └── SearchController.java     # 搜索接口
-│   ├── service/                       # 业务逻辑层
-│   │   ├── AuthService.java          # 认证服务
-│   │   ├── UserService.java          # 用户服务
-│   │   ├── MainLinkService.java      # 总链接服务
-│   │   ├── NoteService.java          # 笔记服务
-│   │   ├── SearchService.java        # 搜索服务
-│   │   └── SensitiveWordService.java # 敏感词服务
-│   ├── mapper/                        # MyBatis Mapper 接口
-│   │   ├── UserMapper.java
-│   │   ├── MainLinkMapper.java
-│   │   ├── NoteItemMapper.java
-│   │   ├── LoginFailRecordMapper.java
-│   │   └── SensitiveWordMapper.java
-│   ├── entity/                        # 实体类
-│   │   ├── User.java
-│   │   ├── MainLink.java
-│   │   ├── NoteItem.java
-│   │   ├── LoginFailRecord.java
-│   │   └── SensitiveWord.java
-│   ├── dto/                           # 数据传输对象
-│   │   ├── RegisterDTO.java
-│   │   ├── LoginDTO.java
-│   │   ├── ChangePasswordDTO.java
-│   │   ├── NoteDTO.java
-│   │   └── MainLinkDTO.java
-│   ├── vo/                            # 视图对象
-│   │   ├── UserVO.java
-│   │   ├── NoteVO.java
-│   │   ├── MainLinkVO.java
-│   │   ├── ActiveUserVO.java
-│   │   ├── LoginVO.java
-│   │   ├── PageResult.java
-│   │   └── SearchVO.java
-│   ├── enums/                         # 枚举类
-│   │   └── ErrorCode.java            # 错误码枚举
-│   ├── exception/                     # 异常处理
-│   │   ├── BusinessException.java    # 业务异常
-│   │   └── GlobalExceptionHandler.java # 全局异常处理器
-│   ├── interceptor/                   # 拦截器
-│   │   └── AuthInterceptor.java      # JWT 认证拦截器
-│   ├── util/                          # 工具类
-│   │   └── JwtUtil.java              # JWT 工具类
-│   └── service/impl/                  # 服务实现
-└── src/main/resources/
-    ├── application.yml               # 应用配置
-    └── init.sql                      # 数据库初始化脚本
+src/main/java/com/note/
+├── NoteApplication.java              # 应用入口
+├── config/                            # 配置类
+│   ├── SecurityConfig.java           # Spring Security
+│   ├── WebConfig.java                # 拦截器注册
+│   ├── MybatisPlusConfig.java        # 分页插件
+│   ├── RedisConfig.java              # Redis 配置
+│   └── OpenApiConfig.java            # Swagger 配置
+├── controller/
+│   ├── user/                         # 用户端接口（6个）
+│   └── admin/                        # 管理端接口（9个，45个端点）
+├── service/                           # 业务逻辑层（17个）
+├── mapper/                            # MyBatis-Plus Mapper
+├── entity/                            # 数据实体
+├── dto/                               # 请求参数
+├── vo/                                # 响应数据
+├── interceptor/
+│   ├── AuthInterceptor.java          # 用户端 JWT 拦截器
+│   └── AdminAuthInterceptor.java     # 管理端 JWT 拦截器
+├── util/
+│   ├── JwtUtil.java                  # 用户端 JWT
+│   └── AdminJwtUtil.java             # 管理端 JWT（独立密钥）
+├── enums/ErrorCode.java              # 错误码（1xxx-6xxx）
+├── exception/                        # 异常处理
+└── scheduled/
+    └── LogCleanupTask.java           # 操作日志定时清理
+
+src/main/resources/
+├── application.yml                    # 应用配置
+├── init.sql                          # 用户端建表
+├── init_admin.sql                    # 管理端建表
+└── mapper/*.xml                      # Mapper XML
 ```
 
 ## 技术栈
 
-- **框架**: Spring Boot 3.2.x
-- **安全**: Spring Security (JWT 认证)
-- **ORM**: MyBatis-Plus 3.5.x
-- **数据库**: MySQL 8.0+
-- **缓存**: Redis 7.x
-- **验证**: Jakarta Validation
-- **其他**: Lombok, Hutool, JJWT
+- Spring Boot 3.2 + Java 17
+- Spring Security + JWT（用户端/管理端双密钥隔离）
+- MyBatis-Plus 3.5 + MySQL 8.0
+- Redis 7（缓存 + 登录锁定 + 黑名单）
+- SpringDoc OpenAPI（Swagger 文档）
+- Lombok + Hutool + BCrypt
 
 ## 快速开始
 
-### 1. 环境要求
+### 本地开发
+
+**1. 环境要求**
 
 - JDK 17+
 - MySQL 8.0+
 - Redis 7.x
+- Maven 3.9+
 
-### 2. 数据库初始化
+**2. 初始化数据库**
 
 ```bash
 mysql -u root -p < src/main/resources/init.sql
+mysql -u root -p < src/main/resources/init_admin.sql
 ```
 
-### 3. 修改配置文件
+**3. 修改配置**
 
-编辑 `src/main/resources/application.yml`，配置数据库连接：
+编辑 `src/main/resources/application.yml`，修改数据库和 Redis 连接信息。
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/note_sharing?...
-    username: root
-    password: your_password
-  data:
-    redis:
-      host: localhost
-      port: 6379
-```
-
-### 4. 启动应用
+**4. 启动**
 
 ```bash
 mvn spring-boot:run
-```
-
-或打包后运行：
-
-```bash
-mvn clean package
+# 或
+mvn clean package -DskipTests
 java -jar target/note-sharing-platform-1.0.0.jar
 ```
 
-## API 接口说明
+### Docker 部署（Linux 虚拟机）
 
-### 认证相关
+**1. 安装 Docker**
 
-| 方法 | 路径               | 说明     |
-| ---- | ------------------ | -------- |
-| POST | /api/auth/register | 用户注册 |
-| POST | /api/auth/login    | 用户登录 |
+```bash
+# Ubuntu
+sudo apt update && sudo apt install -y docker.io docker-compose
+sudo systemctl enable docker && sudo systemctl start docker
 
-### 用户相关
+# CentOS
+sudo yum install -y docker docker-compose-plugin
+sudo systemctl enable docker && sudo systemctl start docker
+```
 
-| 方法 | 路径                | 说明             |
-| ---- | ------------------- | ---------------- |
-| GET  | /api/users/current  | 获取当前用户信息 |
-| PUT  | /api/users/password | 修改密码         |
-| GET  | /api/users/active   | 获取活跃用户列表 |
+**2. 上传项目**
 
-### 总链接相关
+```bash
+# 从 Gitee 克隆
+cd /opt
+git clone https://gitee.com/liShuwen123/noteshare.git
+cd noteshare/project/note-backend
+```
 
-| 方法   | 路径                    | 说明            |
-| ------ | ----------------------- | --------------- |
-| POST   | /api/main-link          | 设置/更新总链接 |
-| GET    | /api/main-link/{userId} | 获取用户总链接  |
-| DELETE | /api/main-link          | 删除我的总链接  |
+**3. 配置环境变量（可选）**
 
-### 笔记相关
+```bash
+# 自定义密码，不设置则使用默认值
+export MYSQL_ROOT_PASSWORD=YourStrongPassword
+export REDIS_PASSWORD=YourStrongPassword
+```
 
-| 方法   | 路径                     | 说明             |
-| ------ | ------------------------ | ---------------- |
-| POST   | /api/notes               | 创建笔记         |
-| GET    | /api/notes/user/{userId} | 获取用户笔记列表 |
-| GET    | /api/notes/{noteId}      | 获取单个笔记详情 |
-| PUT    | /api/notes/{noteId}      | 更新笔记         |
-| DELETE | /api/notes/{noteId}      | 删除笔记         |
-| POST   | /api/notes/{noteId}/view | 增加浏览量       |
+**4. 一键启动**
 
-### 搜索相关
+```bash
+docker compose up -d
+```
 
-| 方法 | 路径                  | 说明     |
-| ---- | --------------------- | -------- |
-| GET  | /api/search?keyword=X | 全局搜索 |
+Docker 会自动：
+- 拉取 MySQL 8.0 和 Redis 7 镜像
+- 执行 `init.sql` → `init_admin.sql` → `init_with_test_data.sql` 初始化数据库
+- 构建后端 JAR 并启动
+
+**5. 常用命令**
+
+```bash
+docker compose ps                    # 查看容器状态
+docker compose logs -f backend       # 查看后端日志
+docker compose restart backend       # 重启后端
+docker compose down                  # 停止所有服务
+docker compose down -v               # 停止并删除数据卷
+```
+
+**6. 验证部署**
+
+```bash
+curl http://localhost:8080/api/admin/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+## 访问地址
+
+| 服务 | 地址 |
+|------|------|
+| 用户端前端 | http://localhost |
+| 管理端前端 | http://localhost:81 |
+| 后端 API | http://localhost:8080/api |
+| Swagger UI | http://localhost:8080/api/swagger-ui.html |
+| OpenAPI JSON | http://localhost:8080/api/openapi.json |
+
+## API 总览
+
+### 用户端 `/api/user/`
+
+| 模块 | 端点数 | 路径前缀 |
+|------|--------|---------|
+| 认证管理 | 4 | `/user/auth` |
+| 用户管理 | 3 | `/user/users` |
+| 笔记管理 | 5 | `/user/notes` |
+| 总链接管理 | 3 | `/user/main-link` |
+| 搜索 | 1 | `/user/search` |
+| 文件上传 | 1 | `/user/upload` |
+
+### 管理端 `/api/admin/`
+
+| 模块 | 端点数 | 路径前缀 |
+|------|--------|---------|
+| 认证管理 | 4 | `/admin/auth` |
+| 仪表盘 | 5 | `/admin/dashboard` |
+| 用户管理 | 6 | `/admin/users` |
+| 笔记管理 | 6 | `/admin/notes` |
+| 链接管理 | 3 | `/admin/links` |
+| 敏感词管理 | 8 | `/admin/words` |
+| 数据统计 | 7 | `/admin/stats` |
+| 操作日志 | 1 | `/admin/logs` |
+| 管理员管理 | 5 | `/admin/admins`（仅超管） |
 
 ## 安全特性
 
-- 登录失败 5 次锁定账号 10 分钟
-- 密码使用 BCrypt 加密存储
-- JWT Token 有效期 7 天
-- 敏感词过滤（DFA 算法）
+- 登录失败 5 次锁定账号 10 分钟（用户端/管理端独立）
+- 密码 BCrypt 加密存储
+- 用户端 JWT 7 天有效期，管理端 JWT 24 小时有效期
+- 用户端/管理端 JWT 密钥隔离
+- 管理员禁用用户时自动加入 Redis 黑名单
+- 敏感词 DFA 算法过滤
+- 操作日志审计（90 天自动清理）
+- 超级管理员保护（不可禁用最后一个超管）
 
-## 数据字典
+## 数据表
 
-### 用户表 (t_user)
-
-- status: 1-正常，0-禁用，2-锁定
-
-### 敏感词表 (t_sensitive_word)
-
-- type: 1-政治，2-色情，3-暴力，4-广告
-- status: 1-启用，0-禁用
-
-### 笔记表 (t_note_item)
-
-- is_deleted: 1-已删除，0-未删除（逻辑删除）
+| 表名 | 说明 |
+|------|------|
+| t_user | 用户表（status: 0=禁用, 1=正常, 2=锁定） |
+| t_main_link | 总链接表（一对一） |
+| t_note_item | 笔记表（is_deleted: 逻辑删除） |
+| t_login_fail_record | 用户登录失败记录 |
+| t_sensitive_word | 敏感词表（type: 1=政治, 2=色情, 3=暴力, 4=广告） |
+| t_admin | 管理员表（role: 1=超管, 2=普通） |
+| t_admin_login_fail_record | 管理员登录失败记录 |
+| t_operation_log | 操作日志表 |

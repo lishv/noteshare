@@ -4,40 +4,60 @@ services:
   mysql:
     image: mysql:8.0
     container_name: note-mysql
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: L2570410870
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-NoteShare@2024}
       MYSQL_DATABASE: note_sharing
+      TZ: Asia/Shanghai
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./src/main/resources/init_with_test_data.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./src/main/resources/init_admin.sql:/docker-entrypoint-initdb.d/02-init_admin.sql
+      - ./src/main/resources/init_with_test_data.sql:/docker-entrypoint-initdb.d/03-test-data.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     container_name: note-redis
+    restart: always
     ports:
       - "6379:6379"
-    command: redis-server --requirepass L2570410870
+    command: redis-server --requirepass ${REDIS_PASSWORD:-NoteShare@2024} --appendonly yes
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-NoteShare@2024}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: .
     container_name: note-backend
+    restart: always
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/note_sharing?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/note_sharing?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: L2570410870
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-NoteShare@2024}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-NoteShare@2024}
       SPRING_DATA_REDIS_DATABASE: 9
-      SPRING_DATA_REDIS_PASSWORD: L2570410870
+      TZ: Asia/Shanghai
 
 volumes:
   mysql-data:

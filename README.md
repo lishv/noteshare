@@ -124,6 +124,17 @@ spring:
 
 ### 3. 启动后端
 
+#### 方式一：Docker（推荐）
+
+```bash
+cd project/note-backend
+docker-compose up -d
+```
+
+自动启动 MySQL + Redis + 后端服务，数据库使用 `init.sql` + `init_admin.sql` + `init_with_test_data.sql` 自动初始化。
+
+#### 方式二：手动启动
+
 ```bash
 cd project/note-backend
 mvn spring-boot:run
@@ -161,14 +172,35 @@ npm run dev
 | 操作日志   | `/admin/logs`      | 1      | 分页查询（支持类型和时间筛选）                 |
 | 管理员管理 | `/admin/admins`    | 5      | 超管专用：列表、创建、编辑、启禁用、重置密码   |
 
+## 生产部署
+
+项目提供集群部署方案，配置文件位于 `project/deploy/`：
+
+| 文件 | 说明 |
+|------|------|
+| `nginx-lb.conf` | Nginx 负载均衡配置（用户端 :80，管理端 :81，后端集群 8081/8082/8083） |
+| `start-cluster.bat` | 启动 3 个后端实例 |
+| `stop-cluster.bat` | 停止集群 |
+
+```bash
+# 1. 构建后端
+cd project/note-backend
+mvn package -DskipTests
+
+# 2. 启动后端集群
+cd ../deploy
+start-cluster.bat
+
+# 3. 配置 Nginx 使用 nginx-lb.conf
+```
+
 ## 开发文档
 
-| 文档             | 路径                            | 说明                   |
-| ---------------- | ------------------------------- | ---------------------- |
-| 用户端 PRD       | `prd.md`                        | 产品需求文档           |
-| 管理端 PRD       | `admin-prd.md`                  | 管理端需求文档         |
-| API 文档         | `api-docs.json`                 | OpenAPI 3.0 格式       |
-| 用户端数据库设计 | `用户端数据库与接口设计计划.md` | 表结构和接口设计       |
+| 文档 | 路径 | 说明 |
+|------|------|------|
+| 用户端 PRD | `prd.md` | 用户端产品需求文档 |
+| 管理端 PRD | `admin-prd.md` | 管理端产品需求文档 |
+| 用户端数据库设计 | `用户端数据库与接口设计计划.md` | 用户端表结构和接口设计 |
 | 管理端数据库设计 | `管理端数据库与接口设计计划.md` | 管理端表结构和接口设计 |
-
-用户端前端 http://localhost:5173、后端 API http://localhost:8080/api、Swagger 文档等
+| 管理端接口详情 | `管理端接口数据库.md` | 45 个接口完整 Request/Response JSON 示例 |
+| API 文档（Apifox） | `combined-api-docs.json` | OpenAPI 3.0 格式（含用户端 + 管理端，可直接导入 Apifox）|
