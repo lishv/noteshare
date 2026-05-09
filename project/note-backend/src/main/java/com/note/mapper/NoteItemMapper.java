@@ -37,4 +37,7 @@ public interface NoteItemMapper extends BaseMapper<NoteItem> {
     IPage<NoteVO> selectNotePageAdmin(Page<NoteVO> page, @Param("keyword") String keyword, @Param("isDeleted") Integer isDeleted);
 
     List<NoteVO> selectTopNotes(@Param("limit") Integer limit);
+
+    @Select("SELECT IFNULL(SUM(view_count), 0) FROM t_note_item WHERE is_deleted = 0")
+    Long sumViewCount();
 }

@@ -35,7 +35,8 @@ public class DashboardService {
 
         vo.setTotalUsers(totalUsers);
         vo.setTotalNotes(totalNotes);
-        vo.setTotalViews(0L);
+        Long totalViews = noteItemMapper.sumViewCount();
+        vo.setTotalViews(totalViews);
 
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         Long activeUsersToday = userMapper.selectCount(new QueryWrapper<com.note.entity.User>()

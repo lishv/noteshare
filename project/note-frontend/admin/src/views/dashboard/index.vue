@@ -37,11 +37,13 @@ import { User, Document, View, Timer } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { getDashboardOverview, getUserTrend, getNoteTrend } from '@/api/admin'
 
+interface TrendItem { date: string; count: number }
+
 const statCards = ref([
   { key: 'totalUsers', label: '总用户数', value: 0, icon: User },
   { key: 'totalNotes', label: '总笔记数', value: 0, icon: Document },
   { key: 'totalViews', label: '总浏览量', value: 0, icon: View },
-  { key: 'activeUsers', label: '活跃用户(今日)', value: 0, icon: Timer },
+  { key: 'activeUsersToday', label: '活跃用户(今日)', value: 0, icon: Timer },
 ])
 
 const userTrendChartRef = ref<HTMLElement>()
@@ -65,39 +67,35 @@ const fetchOverview = async () => {
     statCards.value[0].value = data.totalUsers
     statCards.value[1].value = data.totalNotes
     statCards.value[2].value = data.totalViews
-    statCards.value[3].value = data.activeUsers
-  } catch (e) {
-    // handled by interceptor
-  }
+    statCards.value[3].value = data.activeUsersToday
+  } catch (e) { /* handled */ }
 }
 
 const fetchTrends = async () => {
   try {
     const [userRes, noteRes] = await Promise.all([getUserTrend(7), getNoteTrend(7)])
-    const userData = userRes.data
-    const noteData = noteRes.data
+    const userData: TrendItem[] = userRes.data
+    const noteData: TrendItem[] = noteRes.data
 
     if (userTrendChart) {
       userTrendChart.setOption({
         title: { text: '近7天用户注册趋势', left: 'center' },
         tooltip: { trigger: 'axis' },
-        xAxis: { type: 'category', data: userData.dates },
+        xAxis: { type: 'category', data: userData.map(d => d.date) },
         yAxis: { type: 'value' },
-        series: [{ name: '注册数', type: 'line', data: userData.counts, smooth: true, areaStyle: { opacity: 0.3 } }],
+        series: [{ name: '注册数', type: 'line', data: userData.map(d => d.count), smooth: true, areaStyle: { opacity: 0.3 } }],
       })
     }
     if (noteTrendChart) {
       noteTrendChart.setOption({
         title: { text: '近7天笔记发布趋势', left: 'center' },
         tooltip: { trigger: 'axis' },
-        xAxis: { type: 'category', data: noteData.dates },
+        xAxis: { type: 'category', data: noteData.map(d => d.date) },
         yAxis: { type: 'value' },
-        series: [{ name: '发布数', type: 'line', data: noteData.counts, smooth: true, areaStyle: { opacity: 0.3 } }],
+        series: [{ name: '发布数', type: 'line', data: noteData.map(d => d.count), smooth: true, areaStyle: { opacity: 0.3 } }],
       })
     }
-  } catch (e) {
-    // handled by interceptor
-  }
+  } catch (e) { /* handled */ }
 }
 
 onMounted(async () => {
