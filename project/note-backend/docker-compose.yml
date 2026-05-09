@@ -6,7 +6,7 @@ services:
     container_name: note-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-NoteShare@2024}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:L2570410870}
       MYSQL_DATABASE: note_sharing
       TZ: Asia/Shanghai
     ports:
@@ -52,10 +52,10 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/note_sharing?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-NoteShare@2024}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:L2570410870}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-NoteShare@2024}
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:L2570410870}
       SPRING_DATA_REDIS_DATABASE: 9
       TZ: Asia/Shanghai
 
