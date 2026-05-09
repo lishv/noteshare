@@ -50,14 +50,27 @@ public class AdminAuthService {
     @Transactional
     public AdminLoginVO login(AdminLoginDTO dto, String ipAddress) {
         String failKey = ADMIN_LOGIN_FAIL_KEY + dto.getUsername() + ":" + ipAddress;
-        Integer failCount = (Integer) redisTemplate.opsForValue().get(failKey);
-        if (failCount != null && failCount >= maxFailCount) {
-            throw new BusinessException(ErrorCode.ADMIN_ACCOUNT_LOCKED);
+
+        try {
+            Object raw = redisTemplate.opsForValue().get(failKey);
+            Integer failCount = null;
+            if (raw instanceof Number) {
+                failCount = ((Number) raw).intValue();
+            } else if (raw instanceof String) {
+                failCount = Integer.parseInt((String) raw);
+            }
+            if (failCount != null && failCount >= maxFailCount) {
+                throw new BusinessException(ErrorCode.ADMIN_ACCOUNT_LOCKED);
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception ignored) {
+            // Redis 不可用时跳过失败次数检查，允许登录
         }
 
         Admin admin = adminMapper.selectByUsername(dto.getUsername());
         if (admin == null) {
-            incrementFailCount(failKey);
+            safeIncrementFailCount(failKey);
             throw new BusinessException(ErrorCode.ADMIN_NOT_FOUND);
         }
 
@@ -66,11 +79,11 @@ public class AdminAuthService {
         }
 
         if (!passwordEncoder.matches(dto.getPassword(), admin.getPassword())) {
-            incrementFailCount(failKey);
+            safeIncrementFailCount(failKey);
             throw new BusinessException(ErrorCode.ADMIN_PASSWORD_ERROR);
         }
 
-        redisTemplate.delete(failKey);
+        try { redisTemplate.delete(failKey); } catch (Exception ignored) {}
 
         adminMapper.updateLastLoginAt(admin.getId(), LocalDateTime.now());
 
@@ -78,7 +91,9 @@ public class AdminAuthService {
 
         String token = adminJwtUtil.generateToken(admin.getId(), admin.getUsername());
 
-        logOperation(admin.getId(), admin.getUsername(), "LOGIN", "管理员登录: " + admin.getUsername(), null, null, ipAddress);
+        try {
+            logOperation(admin.getId(), admin.getUsername(), "LOGIN", "管理员登录: " + admin.getUsername(), null, null, ipAddress);
+        } catch (Exception ignored) {}
 
         AdminLoginVO vo = new AdminLoginVO();
         vo.setToken(token);
@@ -113,9 +128,11 @@ public class AdminAuthService {
         logOperation(adminId, admin.getUsername(), "LOGIN", "管理员修改密码", null, null, ipAddress);
     }
 
-    private void incrementFailCount(String key) {
-        redisTemplate.opsForValue().increment(key);
-        redisTemplate.expire(key, lockDuration, TimeUnit.SECONDS);
+    private void safeIncrementFailCount(String key) {
+        try {
+            redisTemplate.opsForValue().increment(key);
+            redisTemplate.expire(key, lockDuration, TimeUnit.SECONDS);
+        } catch (Exception ignored) {}
     }
 
     private void logOperation(Long adminId, String adminUsername, String operationType,

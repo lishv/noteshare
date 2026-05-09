@@ -38,12 +38,12 @@ public class AdminUserService {
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
-    public PageResult<ActiveUserVO> listUsers(Integer page, Integer size, String keyword) {
+    public PageResult<ActiveUserVO> listUsers(Integer page, Integer size, String keyword, Integer status) {
         if (page == null) page = 1;
         if (size == null) size = 10;
 
         Page<ActiveUserVO> userPage = new Page<>(page, size);
-        IPage<ActiveUserVO> result = userMapper.searchUsers(userPage, keyword);
+        IPage<ActiveUserVO> result = userMapper.searchUsers(userPage, keyword, status);
         return PageResult.of(result.getTotal(), page, size, result.getRecords());
     }
 

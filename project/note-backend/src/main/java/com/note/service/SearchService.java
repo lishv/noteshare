@@ -29,7 +29,7 @@ public class SearchService {
         result.setSize(size);
 
         Page<ActiveUserVO> userPage = new Page<>(1, 10);
-        IPage<ActiveUserVO> userResult = userMapper.searchUsers(userPage, keyword);
+        IPage<ActiveUserVO> userResult = userMapper.searchUsers(userPage, keyword, null);
         result.setUsers(userResult.getRecords());
 
         Page<NoteVO> notePage = new Page<>(1, 10);

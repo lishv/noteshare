@@ -91,6 +91,10 @@ public class AdminManageService {
             throw new BusinessException(ErrorCode.CANNOT_OPERATE_SELF);
         }
 
+        if ("admin".equals(admin.getUsername())) {
+            throw new BusinessException(ErrorCode.ADMIN_ACCESS_DENIED, "默认超级管理员不可被禁用");
+        }
+
         if (admin.getRole() == 1 && status == 0) {
             Long superCount = adminMapper.selectCount(new LambdaQueryWrapper<Admin>()
                     .eq(Admin::getRole, 1)
@@ -114,6 +118,10 @@ public class AdminManageService {
         Admin admin = adminMapper.selectById(adminId);
         if (admin == null) {
             throw new BusinessException(ErrorCode.ADMIN_NOT_FOUND);
+        }
+
+        if ("admin".equals(admin.getUsername())) {
+            throw new BusinessException(ErrorCode.ADMIN_ACCESS_DENIED, "默认超级管理员密码不可被重置");
         }
 
         admin.setPassword(passwordEncoder.encode("admin123"));

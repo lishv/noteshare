@@ -6,15 +6,22 @@
         SELECT
             u.id,
             u.username,
+            u.email,
             u.avatar,
+            u.status,
             u.last_active_at,
+            u.created_at,
             COALESCE((SELECT COUNT(1) FROM t_note_item n WHERE n.user_id = u.id AND n.is_deleted = 0), 0) AS noteCount,
             (SELECT COUNT(1) FROM t_main_link m WHERE m.user_id = u.id) > 0 AS hasMainLink
         FROM t_user u
-        WHERE u.status = 1
-        <if test="keyword != null and keyword != ''">
-            AND u.username LIKE CONCAT('%', #{keyword}, '%')
-        </if>
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username LIKE CONCAT('%', #{keyword}, '%') OR u.email LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND u.status = #{status}
+            </if>
+        </where>
         ORDER BY u.last_active_at DESC
     </select>
 

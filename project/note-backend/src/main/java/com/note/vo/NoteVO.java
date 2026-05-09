@@ -26,6 +26,9 @@ public class NoteVO {
     @Schema(description = "浏览量", example = "10")
     private Long viewCount;
 
+    @Schema(description = "是否已删除: 0-正常, 1-已删除")
+    private Integer isDeleted;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 

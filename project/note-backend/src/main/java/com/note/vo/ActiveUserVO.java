@@ -14,8 +14,14 @@ public class ActiveUserVO {
     @Schema(description = "用户名", example = "testuser")
     private String username;
 
+    @Schema(description = "邮箱")
+    private String email;
+
     @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
     private String avatar;
+
+    @Schema(description = "状态: 0-禁用, 1-正常, 2-锁定")
+    private Integer status;
 
     @Schema(description = "最后活跃时间")
     private LocalDateTime lastActiveAt;
@@ -25,4 +31,7 @@ public class ActiveUserVO {
 
     @Schema(description = "笔记数量", example = "5")
     private Integer noteCount;
+
+    @Schema(description = "注册时间")
+    private LocalDateTime createdAt;
 }

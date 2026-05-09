@@ -65,7 +65,7 @@ CREATE TABLE `t_operation_log` (
 -- 4. 默认超级管理员数据
 -- 默认账号: admin
 -- 默认密码: admin123
--- BCrypt hash for 'admin123': $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+-- BCrypt hash for 'admin123': $2a$10$akZrr8BZ43N3XtPv98s/AODuSeitef1KOlSfYED3Clot7rlzkdKAy
 -- 首次登录后请立即修改密码
 -- ========================================
 INSERT INTO `t_admin` (
@@ -77,7 +77,7 @@ INSERT INTO `t_admin` (
   )
 VALUES (
     'admin',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2a$10$akZrr8BZ43N3XtPv98s/AODuSeitef1KOlSfYED3Clot7rlzkdKAy',
     'admin@example.com',
     1,
     1

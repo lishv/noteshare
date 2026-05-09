@@ -1,15 +1,17 @@
 # 学生笔记共享平台 - 后端服务
 
-#用户端 #账号: zhangsan #密码: password123 #管理端超级管理员数据
+#用户端 #账号: zhangsan #密码: password123 或1234 #管理端超级管理员数据
 
 # 默认账号: admin
 
 # 默认密码: admin123
 
+#更改后的密码:L2570410870
+
 #直接双击项目根目录下的 start.bat 文件，它会自动执行上述步骤。
 
 <!-- 启动应用后，访问以下地址查看文档：
-
+ 用户端前端 http://localhost:5173、后端 API http://localhost:8080/api、Swagger 文档等
 
 端点	URL	状态
 Swagger UI	http://localhost:8080/api/swagger-ui/index.html

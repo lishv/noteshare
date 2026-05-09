@@ -29,8 +29,9 @@ public class AdminUserController {
     public Result<PageResult<ActiveUserVO>> listUsers(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
-            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword) {
-        return Result.success(adminUserService.listUsers(page, size, keyword));
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "状态筛选: 0-禁用, 1-正常, 2-锁定") @RequestParam(required = false) Integer status) {
+        return Result.success(adminUserService.listUsers(page, size, keyword, status));
     }
 
     @GetMapping("/{userId}")

@@ -78,7 +78,7 @@ public class UserService {
         if (size == null) size = 20;
 
         Page<ActiveUserVO> userPage = new Page<>(page, size);
-        IPage<ActiveUserVO> result = userMapper.searchUsers(userPage, keyword);
+        IPage<ActiveUserVO> result = userMapper.searchUsers(userPage, keyword, null);
 
         return PageResult.of(result.getTotal(), page, size, result.getRecords());
     }

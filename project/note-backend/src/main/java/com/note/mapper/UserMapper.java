@@ -24,5 +24,5 @@ public interface UserMapper extends BaseMapper<User> {
     @Update("UPDATE t_user SET last_active_at = #{lastActiveAt} WHERE id = #{id}")
     int updateLastActiveAt(@Param("id") Long id, @Param("lastActiveAt") LocalDateTime lastActiveAt);
 
-    IPage<ActiveUserVO> searchUsers(Page<ActiveUserVO> page, @Param("keyword") String keyword);
+    IPage<ActiveUserVO> searchUsers(Page<ActiveUserVO> page, @Param("keyword") String keyword, @Param("status") Integer status);
 }
