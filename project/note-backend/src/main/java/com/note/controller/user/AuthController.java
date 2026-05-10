@@ -5,6 +5,7 @@ import com.note.dto.RegisterDTO;
 import com.note.dto.SendCodeDTO;
 import com.note.service.AuthService;
 import com.note.service.VerificationCodeService;
+import com.note.util.JwtUtil;
 import com.note.vo.LoginVO;
 import com.note.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,10 +21,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final VerificationCodeService verificationCodeService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService, VerificationCodeService verificationCodeService) {
+    public AuthController(AuthService authService, VerificationCodeService verificationCodeService, JwtUtil jwtUtil) {
         this.authService = authService;
         this.verificationCodeService = verificationCodeService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/send-code")
@@ -52,5 +55,23 @@ public class AuthController {
     @Operation(summary = "退出登录", description = "用户退出登录")
     public Result<Void> logout() {
         return Result.success("退出登录成功");
+    }
+
+    @GetMapping("/token-status")
+    @Operation(summary = "查询Token状态", description = "返回当前Token剩余有效时间(秒)")
+    public Result<Long> tokenStatus(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (token == null) {
+            return Result.success(0L);
+        }
+        return Result.success(jwtUtil.getTokenRemainingSeconds(token));
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
     }
 }

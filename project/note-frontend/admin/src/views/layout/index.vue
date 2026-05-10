@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAdminStore } from '@/store/admin'
 import {
@@ -104,6 +104,18 @@ function handleCommand(command: string) {
     // 修改密码功能可以后续扩展
   }
 }
+
+function beforeUnloadHandler(e: BeforeUnloadEvent) {
+  e.preventDefault()
+}
+
+onMounted(() => {
+  window.addEventListener('beforeunload', beforeUnloadHandler)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', beforeUnloadHandler)
+})
 </script>
 
 <style scoped>

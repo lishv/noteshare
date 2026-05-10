@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -159,10 +159,28 @@ const previewUrl = ref('')
 const selectedFile = ref<File | null>(null)
 const uploadLoading = ref(false)
 
-onMounted(async () => {
-  await userStore.fetchUserInfo()
-  userInfo.value = userStore.userInfo
-  avatarUrl.value = userInfo.value?.avatar || ''
+const hasUnsavedChanges = computed(() =>
+  !!(passwordForm.oldPassword || passwordForm.newPassword || passwordForm.confirmPassword ||
+     resetForm.email || resetForm.verificationCode || resetForm.newPassword || resetForm.confirmPassword ||
+     selectedFile.value)
+)
+
+function beforeUnloadHandler(e: BeforeUnloadEvent) {
+  if (hasUnsavedChanges.value) {
+    e.preventDefault()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('beforeunload', beforeUnloadHandler)
+  userStore.fetchUserInfo().then(() => {
+    userInfo.value = userStore.userInfo
+    avatarUrl.value = userInfo.value?.avatar || ''
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', beforeUnloadHandler)
 })
 
 // 头像上传

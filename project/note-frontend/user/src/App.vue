@@ -2,6 +2,11 @@
   <router-view />
 </template>
 
+<script setup lang="ts">
+import { startTokenMonitor } from '@/utils/request'
+startTokenMonitor()
+</script>
+
 <style>
 * {
   margin: 0;

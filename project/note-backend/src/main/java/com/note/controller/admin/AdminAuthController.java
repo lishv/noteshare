@@ -3,6 +3,7 @@ package com.note.controller.admin;
 import com.note.dto.AdminChangePasswordDTO;
 import com.note.dto.AdminLoginDTO;
 import com.note.service.AdminAuthService;
+import com.note.util.AdminJwtUtil;
 import com.note.vo.AdminLoginVO;
 import com.note.vo.AdminProfileVO;
 import com.note.vo.Result;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAuthController {
 
     private final AdminAuthService adminAuthService;
+    private final AdminJwtUtil adminJwtUtil;
 
-    public AdminAuthController(AdminAuthService adminAuthService) {
+    public AdminAuthController(AdminAuthService adminAuthService, AdminJwtUtil adminJwtUtil) {
         this.adminAuthService = adminAuthService;
+        this.adminJwtUtil = adminJwtUtil;
     }
 
     @PostMapping("/login")
@@ -52,5 +55,16 @@ public class AdminAuthController {
         String ipAddress = request.getRemoteAddr();
         adminAuthService.changePassword(adminId, dto, ipAddress);
         return Result.success("密码修改成功");
+    }
+
+    @GetMapping("/token-status")
+    @Operation(summary = "查询Token状态", description = "返回当前Token剩余有效时间(秒)")
+    public Result<Long> tokenStatus(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            return Result.success(adminJwtUtil.getTokenRemainingSeconds(token));
+        }
+        return Result.success(0L);
     }
 }

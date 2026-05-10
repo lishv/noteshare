@@ -3,6 +3,7 @@ package com.note.util;
 import com.note.enums.ErrorCode;
 import com.note.exception.BusinessException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,11 +49,22 @@ public class AdminJwtUtil {
         return claims.get("username", String.class);
     }
 
+    public long getTokenRemainingSeconds(String token) {
+        try {
+            Claims claims = getClaimsFromToken(token);
+            return Math.max(0, (claims.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public void validateToken(String token) {
         try {
             getClaimsFromToken(token);
         } catch (BusinessException e) {
             throw e;
+        } catch (ExpiredJwtException e) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
@@ -65,6 +77,8 @@ public class AdminJwtUtil {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
+        } catch (ExpiredJwtException e) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }

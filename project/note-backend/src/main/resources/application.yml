@@ -65,12 +65,12 @@ mybatis-plus:
 
 jwt:
   secret: your-secret-key-at-least-256-bits-long-for-jwt-signing
-  expiration: 604800000
+  expiration: 87000000
 
 admin:
   jwt:
     secret: admin-secret-key-at-least-256-bits-long-for-jwt-signing
-    expiration: 86400000
+    expiration: 87000000
 
 security:
   login:
