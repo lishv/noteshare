@@ -57,12 +57,12 @@ public class NoteService {
         return noteItemMapper.selectNoteWithUserById(noteItem.getId());
     }
 
-    public PageResult<NoteVO> getUserNotes(Long userId, Integer page, Integer size) {
+    public PageResult<NoteVO> getUserNotes(Long userId, Integer page, Integer size, String keyword, String startDate, String endDate) {
         if (page == null) page = 1;
         if (size == null) size = 20;
 
         Page<NoteVO> notePage = new Page<>(page, size);
-        IPage<NoteVO> result = noteItemMapper.selectNotePageWithUser(notePage, userId);
+        IPage<NoteVO> result = noteItemMapper.selectNotePageWithUser(notePage, userId, keyword, startDate, endDate);
 
         return PageResult.of(result.getTotal(), page, size, result.getRecords());
     }

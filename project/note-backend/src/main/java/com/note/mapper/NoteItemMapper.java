@@ -30,7 +30,7 @@ public interface NoteItemMapper extends BaseMapper<NoteItem> {
             "WHERE n.id = #{id} AND n.is_deleted = 0")
     NoteVO selectNoteWithUserById(@Param("id") Long id);
 
-    IPage<NoteVO> selectNotePageWithUser(Page<NoteVO> page, @Param("userId") Long userId);
+    IPage<NoteVO> selectNotePageWithUser(Page<NoteVO> page, @Param("userId") Long userId, @Param("keyword") String keyword, @Param("startDate") String startDate, @Param("endDate") String endDate);
 
     IPage<NoteVO> searchNotesWithUser(Page<NoteVO> page, @Param("keyword") String keyword);
 

@@ -32,12 +32,15 @@ public class NoteController {
     }
 
     @GetMapping("/user/{userId}")
-    @Operation(summary = "获取用户笔记列表", description = "分页获取指定用户的笔记列表")
+    @Operation(summary = "获取用户笔记列表", description = "分页获取指定用户的笔记列表，支持关键词模糊搜索和时间范围")
     public Result<PageResult<NoteVO>> getUserNotes(
             @Parameter(description = "用户ID") @PathVariable Long userId,
             @Parameter(description = "页码") @RequestParam(required = false) Integer page,
-            @Parameter(description = "每页大小") @RequestParam(required = false) Integer size) {
-        PageResult<NoteVO> result = noteService.getUserNotes(userId, page, size);
+            @Parameter(description = "每页大小") @RequestParam(required = false) Integer size,
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "开始日期 yyyy-MM-dd") @RequestParam(required = false) String startDate,
+            @Parameter(description = "结束日期 yyyy-MM-dd") @RequestParam(required = false) String endDate) {
+        PageResult<NoteVO> result = noteService.getUserNotes(userId, page, size, keyword, startDate, endDate);
         return Result.success(result);
     }
 

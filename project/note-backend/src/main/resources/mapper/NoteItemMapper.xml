@@ -9,11 +9,21 @@
         LEFT JOIN t_user u ON n.user_id = u.id
         WHERE n.user_id = #{userId}
           AND n.is_deleted = 0
+          <if test="keyword != null and keyword != ''">
+            AND (n.title LIKE CONCAT('%', #{keyword}, '%')
+                 OR n.location_or_url LIKE CONCAT('%', #{keyword}, '%'))
+          </if>
+          <if test="startDate != null and startDate != ''">
+            AND n.created_at &gt;= #{startDate}
+          </if>
+          <if test="endDate != null and endDate != ''">
+            AND n.created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+          </if>
         ORDER BY n.updated_at DESC
     </select>
 
     <select id="searchNotesWithUser" resultType="com.note.vo.NoteVO">
-        SELECT n.id, n.user_id, u.username, n.title, n.location_or_url,
+        SELECT n.id, n.user_id, u.username, u.avatar, n.title, n.location_or_url,
                n.view_count as viewCount, n.created_at, n.updated_at
         FROM t_note_item n
         LEFT JOIN t_user u ON n.user_id = u.id

@@ -17,6 +17,9 @@ if not exist "dist\" (
     )
 )
 
+echo [INFO] 同步构建产物到 nginx/html ...
+xcopy /E /Y /Q "dist\*" "nginx\html\" >nul
+
 echo [INFO] 启动 nginx...
 cd nginx
 start "" nginx.exe

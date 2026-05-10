@@ -41,7 +41,7 @@ export function createNote(data: NoteRequest): Promise<ApiResponse<NoteItem>> {
 // 获取用户笔记列表
 export function getUserNotes(
   userId: number,
-  params: { page?: number; size?: number }
+  params: { page?: number; size?: number; keyword?: string; startDate?: string; endDate?: string }
 ): Promise<ApiResponse<PageResult<NoteItem>>> {
   return request.get(`/notes/user/${userId}`, params)
 }

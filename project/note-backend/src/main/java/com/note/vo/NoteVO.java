@@ -17,6 +17,9 @@ public class NoteVO {
     @Schema(description = "用户名", example = "testuser")
     private String username;
 
+    @Schema(description = "用户头像")
+    private String avatar;
+
     @Schema(description = "笔记标题", example = "Java基础笔记")
     private String title;
 

@@ -145,7 +145,32 @@
 
           <!-- 子笔记列表 -->
           <div class="notes-section">
-            <h3>笔记列表</h3>
+            <div class="notes-toolbar">
+              <h3>笔记列表</h3>
+              <div class="note-filter-bar">
+                <el-input
+                  v-model="localNoteKeyword"
+                  placeholder="搜索笔记名/链接位置..."
+                  clearable
+                  :prefix-icon="Search"
+                  style="width: 260px"
+                  @keyup.enter="handleLocalNoteSearch"
+                  @clear="handleClearLocalNoteSearch"
+                />
+                <el-date-picker
+                  v-model="noteDateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  value-format="YYYY-MM-DD"
+                  size="default"
+                  style="width: 260px"
+                  @change="handleLocalNoteSearch"
+                />
+                <el-button type="primary" :icon="Search" @click="handleLocalNoteSearch">搜索</el-button>
+              </div>
+            </div>
             <el-table :data="noteList" style="width: 100%" stripe>
               <el-table-column prop="title" label="笔记名称" min-width="200">
                 <template #default="{ row }">
@@ -199,7 +224,7 @@
               </el-table-column>
             </el-table>
             <!-- 笔记分页 -->
-            <div class="note-pagination" v-if="totalNotes > notePageSize">
+            <div class="note-pagination" v-if="totalNotes > 0">
               <el-pagination
                 layout="total, prev, pager, next"
                 :total="totalNotes"
@@ -257,7 +282,9 @@ const pageSize = 20
 const totalUsers = ref(0)
 const totalNotes = ref(0)
 const noteCurrentPage = ref(1)
-const notePageSize = 20
+const notePageSize = 10
+const localNoteKeyword = ref('')
+const noteDateRange = ref<[string, string] | null>(null)
 const showPublishDialog = ref(false)
 const editingNote = ref<NoteItem | null>(null)
 const drawerVisible = ref(false)
@@ -315,6 +342,9 @@ async function fetchUsers() {
 async function selectUser(user: User) {
   selectedUserId.value = user.id
   selectedUser.value = user
+  localNoteKeyword.value = ''
+  noteDateRange.value = null
+  noteCurrentPage.value = 1
   drawerVisible.value = false
   await fetchUserDetail(user.id)
 }
@@ -325,7 +355,13 @@ async function fetchUserDetail(userId: number) {
   try {
     const [linkRes, notesRes] = await Promise.all([
       getMainLink(userId),
-      getUserNotes(userId, { page: noteCurrentPage.value, size: notePageSize }),
+      getUserNotes(userId, {
+        page: noteCurrentPage.value,
+        size: notePageSize,
+        keyword: localNoteKeyword.value || undefined,
+        startDate: noteDateRange.value?.[0] || undefined,
+        endDate: noteDateRange.value?.[1] || undefined,
+      }),
     ])
     mainLink.value = linkRes.data
     noteList.value = notesRes.data.list
@@ -409,7 +445,7 @@ async function handleNoteSearch() {
           userMap.set(note.userId, {
             id: note.userId,
             username: note.username,
-            avatar: '',
+            avatar: note.avatar || '',
             status: 1,
             createdAt: '',
           } as User)
@@ -450,6 +486,21 @@ function handlePageChange(page: number) {
 
 function handleNotePageChange(page: number) {
   noteCurrentPage.value = page
+  if (selectedUserId.value) {
+    fetchUserDetail(selectedUserId.value)
+  }
+}
+
+function handleLocalNoteSearch() {
+  noteCurrentPage.value = 1
+  if (selectedUserId.value) {
+    fetchUserDetail(selectedUserId.value)
+  }
+}
+
+function handleClearLocalNoteSearch() {
+  localNoteKeyword.value = ''
+  noteCurrentPage.value = 1
   if (selectedUserId.value) {
     fetchUserDetail(selectedUserId.value)
   }
@@ -802,6 +853,26 @@ async function handleUserCommand(command: string) {
 }
 
 /* 笔记区 */
+.notes-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  gap: 16px;
+}
+
+.notes-toolbar h3 {
+  white-space: nowrap;
+  margin: 0;
+}
+
+.note-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .notes-section h3 {
   font-size: 16px;
   color: var(--color-text-primary);
@@ -921,6 +992,20 @@ async function handleUserCommand(command: string) {
 
   .main-link-card {
     padding: var(--space-md);
+  }
+
+  .notes-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .note-filter-bar {
+    flex-direction: column;
+  }
+
+  .note-filter-bar .el-input,
+  .note-filter-bar .el-date-picker {
+    width: 100% !important;
   }
 }
 </style>
