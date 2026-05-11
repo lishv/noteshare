@@ -30,6 +30,8 @@ export const batchToggleUserStatus = (data: { ids: number[]; status: number }) =
 export const getNoteList = (params: { page?: number; size?: number; keyword?: string; isDeleted?: number }) =>
   request.get('/notes', { params })
 export const getNoteDetail = (noteId: number) => request.get(`/notes/${noteId}`)
+export const createNote = (userId: number, data: { title: string; locationOrUrl: string }) =>
+  request.post(`/notes?userId=${userId}`, data)
 export const deleteNote = (noteId: number) => request.put(`/notes/${noteId}/delete`)
 export const restoreNote = (noteId: number) => request.put(`/notes/${noteId}/restore`)
 export const batchDeleteNotes = (data: { ids: number[] }) => request.put('/notes/batch-delete', data)

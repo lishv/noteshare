@@ -2,6 +2,8 @@ package com.note.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.note.dto.NoteDTO;
+import com.note.entity.NoteItem;
 import com.note.entity.OperationLog;
 import com.note.enums.ErrorCode;
 import com.note.exception.BusinessException;
@@ -82,6 +84,26 @@ public class AdminNoteService {
 
         logOperation(adminId, adminUsername, "NOTE_MANAGE",
                 "批量恢复笔记，数量: " + noteIds.size(), "NOTE", null, ipAddress);
+    }
+
+    @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
+    public NoteVO createNote(Long userId, NoteDTO dto, Long adminId, String adminUsername, String ipAddress) {
+        NoteItem note = new NoteItem();
+        note.setUserId(userId);
+        note.setTitle(dto.getTitle());
+        note.setLocationOrUrl(dto.getLocationOrUrl());
+        note.setViewCount(0L);
+        note.setIsDeleted(0);
+        note.setCreatedAt(LocalDateTime.now());
+        note.setUpdatedAt(LocalDateTime.now());
+
+        noteItemMapper.insert(note);
+
+        logOperation(adminId, adminUsername, "NOTE_MANAGE",
+                "插入笔记，用户ID: " + userId + "，标题: " + dto.getTitle(), "NOTE", note.getId(), ipAddress);
+
+        return noteItemMapper.selectNoteWithUserById(note.getId());
     }
 
     private void logOperation(Long adminId, String adminUsername, String operationType,

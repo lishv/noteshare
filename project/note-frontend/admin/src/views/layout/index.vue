@@ -69,13 +69,35 @@
         <router-view />
       </el-main>
     </el-container>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog v-model="pwdVisible" title="修改密码" width="420px" @closed="resetPwdForm">
+      <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="90px">
+        <el-form-item label="旧密码" prop="oldPassword">
+          <el-input v-model="pwdForm.oldPassword" type="password" show-password placeholder="请输入旧密码" />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="pwdForm.newPassword" type="password" show-password placeholder="请输入新密码" />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="pwdForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="pwdVisible = false">取消</el-button>
+        <el-button type="primary" :loading="pwdLoading" @click="handleChangePassword">确定</el-button>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { useAdminStore } from '@/store/admin'
+import { changePassword } from '@/api/admin'
 import {
   Odometer,
   User,
@@ -101,8 +123,50 @@ function handleCommand(command: string) {
     adminStore.clearAuth()
     router.push('/login')
   } else if (command === 'changePassword') {
-    // 修改密码功能可以后续扩展
+    pwdVisible.value = true
   }
+}
+
+// 修改密码
+const pwdVisible = ref(false)
+const pwdLoading = ref(false)
+const pwdFormRef = ref<FormInstance>()
+const pwdForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const validateConfirm = (_rule: any, value: string, callback: (err?: Error) => void) => {
+  if (value !== pwdForm.value.newPassword) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const pwdRules: FormRules = {
+  oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
+  newPassword: [{ required: true, message: '请输入新密码', trigger: 'blur' }, { min: 6, message: '密码至少6个字符', trigger: 'blur' }],
+  confirmPassword: [{ required: true, message: '请确认新密码', trigger: 'blur' }, { validator: validateConfirm, trigger: 'blur' }],
+}
+
+const resetPwdForm = () => {
+  pwdForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
+}
+
+const handleChangePassword = async () => {
+  const valid = await pwdFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  pwdLoading.value = true
+  try {
+    await changePassword({ oldPassword: pwdForm.value.oldPassword, newPassword: pwdForm.value.newPassword })
+    ElMessage.success('密码修改成功，请重新登录')
+    pwdVisible.value = false
+    adminStore.clearAuth()
+    router.push('/login')
+  } catch { /* handled */ }
+  finally { pwdLoading.value = false }
 }
 
 function beforeUnloadHandler(e: BeforeUnloadEvent) {

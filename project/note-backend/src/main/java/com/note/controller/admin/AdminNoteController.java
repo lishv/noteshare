@@ -1,6 +1,7 @@
 package com.note.controller.admin;
 
 import com.note.dto.BatchDeleteDTO;
+import com.note.dto.NoteDTO;
 import com.note.service.AdminNoteService;
 import com.note.vo.NoteVO;
 import com.note.vo.PageResult;
@@ -37,6 +38,19 @@ public class AdminNoteController {
     @Operation(summary = "笔记详情", description = "获取笔记详细信息")
     public Result<NoteVO> getNoteDetail(@PathVariable Long noteId) {
         return Result.success(adminNoteService.getNoteDetail(noteId));
+    }
+
+    @PostMapping
+    @Operation(summary = "插入笔记", description = "管理员为指定用户插入笔记")
+    public Result<NoteVO> createNote(
+            @RequestParam Long userId,
+            @Valid @RequestBody NoteDTO dto,
+            HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        NoteVO vo = adminNoteService.createNote(userId, dto, adminId, adminUsername, ipAddress);
+        return Result.success("插入成功", vo);
     }
 
     @PutMapping("/{noteId}/delete")

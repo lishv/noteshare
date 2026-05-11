@@ -7,6 +7,7 @@
         <el-option label="已删除" :value="1" />
       </el-select>
       <el-button type="primary" @click="handleSearch">搜索</el-button>
+      <el-button type="success" @click="showCreateDialog">插入笔记</el-button>
     </div>
 
     <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
@@ -53,13 +54,36 @@
         <el-descriptions-item label="更新时间">{{ detailData.updatedAt }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
+
+    <!-- 新增笔记对话框 -->
+    <el-dialog v-model="createVisible" title="插入笔记" width="500px" @closed="resetCreateForm">
+      <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="90px">
+        <el-form-item label="所属用户" prop="userId">
+          <el-select v-model="createForm.userId" filterable remote reserve-keyword
+            placeholder="输入用户名搜索" :remote-method="searchUsers" :loading="userSearching"
+            style="width: 100%;">
+            <el-option v-for="u in userOptions" :key="u.id" :label="u.username" :value="u.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="笔记标题" prop="title">
+          <el-input v-model="createForm.title" placeholder="请输入笔记标题" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="链接/位置" prop="locationOrUrl">
+          <el-input v-model="createForm.locationOrUrl" placeholder="请输入链接或位置" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="createLoading" @click="handleCreate">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getNoteList, getNoteDetail, deleteNote, restoreNote, batchDeleteNotes, batchRestoreNotes } from '@/api/admin'
+import { getNoteList, getNoteDetail, createNote, deleteNote, restoreNote, batchDeleteNotes, batchRestoreNotes, getUserList } from '@/api/admin'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -124,6 +148,58 @@ const handleViewDetail = async (row: any) => {
     detailData.value = res.data
     detailVisible.value = true
   } catch (e) { /* handled */ }
+}
+
+// 新增笔记
+const createVisible = ref(false)
+const createLoading = ref(false)
+const createFormRef = ref()
+const userSearching = ref(false)
+const userOptions = ref<{ id: number; username: string }[]>([])
+const createForm = ref({
+  userId: undefined as number | undefined,
+  title: '',
+  locationOrUrl: '',
+})
+const createRules = {
+  userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
+  title: [{ required: true, message: '请输入笔记标题', trigger: 'blur' }],
+  locationOrUrl: [{ required: true, message: '请输入链接/位置', trigger: 'blur' }],
+}
+
+const showCreateDialog = () => {
+  createVisible.value = true
+}
+
+const resetCreateForm = () => {
+  createForm.value = { userId: undefined, title: '', locationOrUrl: '' }
+  userOptions.value = []
+}
+
+const searchUsers = async (query: string) => {
+  if (!query) return
+  userSearching.value = true
+  try {
+    const res = await getUserList({ keyword: query, size: 20 })
+    userOptions.value = res.data.list.map((u: any) => ({ id: u.id, username: u.username }))
+  } catch { /* handled */ }
+  finally { userSearching.value = false }
+}
+
+const handleCreate = async () => {
+  const valid = await createFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  createLoading.value = true
+  try {
+    await createNote(createForm.value.userId!, {
+      title: createForm.value.title,
+      locationOrUrl: createForm.value.locationOrUrl,
+    })
+    ElMessage.success('插入成功')
+    createVisible.value = false
+    fetchData()
+  } catch { /* handled */ }
+  finally { createLoading.value = false }
 }
 
 onMounted(() => fetchData())
