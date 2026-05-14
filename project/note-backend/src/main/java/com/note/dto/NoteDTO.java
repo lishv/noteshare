@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Schema(description = "笔记请求参数")
 public class NoteDTO {
@@ -16,4 +18,7 @@ public class NoteDTO {
     @Schema(description = "链接或位置", example = "https://example.com/note", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "链接/位置不能为空")
     private String locationOrUrl;
+
+    @Schema(description = "标签ID列表")
+    private List<Long> tagIds;
 }

@@ -20,11 +20,13 @@ public class NoteService {
     private final NoteItemMapper noteItemMapper;
     private final SensitiveWordService sensitiveWordService;
     private final MainLinkService mainLinkService;
+    private final TagService tagService;
 
-    public NoteService(NoteItemMapper noteItemMapper, SensitiveWordService sensitiveWordService, MainLinkService mainLinkService) {
+    public NoteService(NoteItemMapper noteItemMapper, SensitiveWordService sensitiveWordService, MainLinkService mainLinkService, TagService tagService) {
         this.noteItemMapper = noteItemMapper;
         this.sensitiveWordService = sensitiveWordService;
         this.mainLinkService = mainLinkService;
+        this.tagService = tagService;
     }
 
     @Transactional
@@ -49,10 +51,15 @@ public class NoteService {
         noteItem.setLocationOrUrl(dto.getLocationOrUrl());
         noteItem.setViewCount(0L);
         noteItem.setIsDeleted(0);
+        noteItem.setIsPinned(0);
         noteItem.setCreatedAt(LocalDateTime.now());
         noteItem.setUpdatedAt(LocalDateTime.now());
 
         noteItemMapper.insert(noteItem);
+
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            tagService.syncNoteTags(noteItem.getId(), dto.getTagIds());
+        }
 
         return noteItemMapper.selectNoteWithUserById(noteItem.getId());
     }
@@ -103,6 +110,10 @@ public class NoteService {
 
         noteItemMapper.updateById(noteItem);
 
+        if (dto.getTagIds() != null) {
+            tagService.syncNoteTags(noteId, dto.getTagIds());
+        }
+
         return noteItemMapper.selectNoteWithUserById(noteId);
     }
 
@@ -122,5 +133,33 @@ public class NoteService {
 
     public void incrementViewCount(Long noteId) {
         noteItemMapper.incrementViewCount(noteId);
+    }
+
+    @Transactional
+    public void pinNote(Long noteId, Long userId) {
+        NoteItem noteItem = noteItemMapper.selectById(noteId);
+        if (noteItem == null || noteItem.getIsDeleted() == 1) {
+            throw new BusinessException(ErrorCode.NOTE_NOT_FOUND);
+        }
+        if (!noteItem.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NOTE_ACCESS_DENIED);
+        }
+        noteItem.setIsPinned(1);
+        noteItem.setUpdatedAt(LocalDateTime.now());
+        noteItemMapper.updateById(noteItem);
+    }
+
+    @Transactional
+    public void unpinNote(Long noteId, Long userId) {
+        NoteItem noteItem = noteItemMapper.selectById(noteId);
+        if (noteItem == null) {
+            throw new BusinessException(ErrorCode.NOTE_NOT_FOUND);
+        }
+        if (!noteItem.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NOTE_ACCESS_DENIED);
+        }
+        noteItem.setIsPinned(0);
+        noteItem.setUpdatedAt(LocalDateTime.now());
+        noteItemMapper.updateById(noteItem);
     }
 }

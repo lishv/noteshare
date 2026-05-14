@@ -40,6 +40,7 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
                 <el-dropdown-item command="settings">个人设置</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
@@ -117,7 +118,7 @@
               {{ selectedUser.username.charAt(0) }}
             </el-avatar>
             <div class="user-details">
-              <h2>{{ selectedUser.username }}</h2>
+              <h2 class="clickable-username" @click="$router.push(`/user/${selectedUser.id}`)">{{ selectedUser.username }}</h2>
               <p class="user-stats">{{ selectedUser.noteCount || 0 }} 篇笔记</p>
             </div>
           </div>
@@ -174,7 +175,10 @@
             <el-table :data="noteList" style="width: 100%" stripe>
               <el-table-column prop="title" label="笔记名称" min-width="200">
                 <template #default="{ row }">
-                  <span class="note-title">{{ row.title }}</span>
+                  <span class="note-title">
+                    <el-tag v-if="row.isPinned === 1" type="warning" size="small" style="margin-right: 6px;">置顶</el-tag>
+                    {{ row.title }}
+                  </span>
                 </template>
               </el-table-column>
               <el-table-column prop="locationOrUrl" label="链接/位置" min-width="250">
@@ -216,10 +220,16 @@
                   {{ formatDate(row.updatedAt) }}
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="140" align="center" v-if="isOwner">
+              <el-table-column label="操作" :width="isOwner ? '240' : '140'" align="center">
                 <template #default="{ row }">
-                  <el-button type="primary" size="small" text @click="editNote(row)">编辑</el-button>
-                  <el-button type="danger" size="small" text @click="handleDeleteNote(row)">删除</el-button>
+                  <el-button v-if="isLoggedIn && !isOwner" :type="favoriteMap[row.id] ? 'warning' : 'default'" size="small" text @click="toggleFavorite(row)">
+                    {{ favoriteMap[row.id] ? '已收藏' : '收藏' }}
+                  </el-button>
+                  <el-button v-if="isOwner" type="primary" size="small" text @click="editNote(row)">编辑</el-button>
+                  <el-button v-if="isOwner" :type="row.isPinned === 1 ? 'warning' : 'default'" size="small" text @click="togglePin(row)">
+                    {{ row.isPinned === 1 ? '取消置顶' : '置顶' }}
+                  </el-button>
+                  <el-button v-if="isOwner" type="danger" size="small" text @click="handleDeleteNote(row)">删除</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -257,7 +267,7 @@ import { useRouter } from 'vue-router'
 import { User as UserIcon, Search, Plus, Menu, Link, ArrowRight, CopyDocument, Close } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
-import { getActiveUsers, getMainLink, getUserNotes, deleteNote, globalSearch, incrementNoteView } from '@/api/note'
+import { getActiveUsers, getMainLink, getUserNotes, deleteNote, globalSearch, incrementNoteView, addFavorite, removeFavorite, checkFavorite, pinNote, unpinNote } from '@/api/note'
 import { formatDate, isUrl, isSafeUrl } from '@/utils/helpers'
 import PublishDialog from '@/components/PublishDialog.vue'
 import type { User, MainLink, NoteItem } from '@/types'
@@ -351,6 +361,7 @@ async function selectUser(user: User) {
 
 // 获取用户详情
 async function fetchUserDetail(userId: number) {
+  if (!userId) return
   contentLoading.value = true
   try {
     const [linkRes, notesRes] = await Promise.all([
@@ -389,6 +400,7 @@ async function fetchUserDetail(userId: number) {
     }
   } finally {
     contentLoading.value = false
+    loadFavorites()
   }
 }
 
@@ -563,13 +575,61 @@ function onPublishSuccess() {
 
 // 用户菜单操作
 async function handleUserCommand(command: string) {
-  if (command === 'settings') {
+  if (command === 'favorites') {
+    router.push('/favorites')
+  } else if (command === 'settings') {
     router.push('/settings')
   } else if (command === 'logout') {
     userStore.logout()
     ElMessage.success('已退出登录')
     router.push('/')
   }
+}
+
+// ========== 收藏 ==========
+const favoriteMap = ref<Record<number, boolean>>({})
+
+async function loadFavorites() {
+  if (!isLoggedIn.value) return
+  favoriteMap.value = {}
+  for (const note of noteList.value) {
+    if (!note.id) continue
+    try {
+      const res = await checkFavorite(note.id)
+      favoriteMap.value[note.id] = res.data
+    } catch { favoriteMap.value[note.id] = false }
+  }
+}
+
+async function toggleFavorite(row: NoteItem) {
+  if (!isLoggedIn.value) return
+  try {
+    if (favoriteMap.value[row.id]) {
+      await removeFavorite(row.id)
+      favoriteMap.value[row.id] = false
+      ElMessage.success('已取消收藏')
+    } else {
+      await addFavorite(row.id)
+      favoriteMap.value[row.id] = true
+      ElMessage.success('收藏成功')
+    }
+  } catch { /* handled */ }
+}
+
+// ========== 置顶 ==========
+async function togglePin(row: NoteItem) {
+  try {
+    if (row.isPinned === 1) {
+      await unpinNote(row.id)
+      ElMessage.success('已取消置顶')
+    } else {
+      await pinNote(row.id)
+      ElMessage.success('已置顶')
+    }
+    if (selectedUserId.value) {
+      fetchUserDetail(selectedUserId.value)
+    }
+  } catch { /* handled */ }
 }
 </script>
 
@@ -781,6 +841,14 @@ async function handleUserCommand(command: string) {
   font-size: 20px;
   color: var(--color-text-primary);
   font-weight: 600;
+}
+
+.clickable-username {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.clickable-username:hover {
+  color: var(--color-primary, #409eff);
 }
 
 .user-stats {

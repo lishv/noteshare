@@ -55,6 +55,12 @@
             class="form-alert"
           />
         </el-form-item>
+        <el-form-item label="标签">
+          <el-select v-model="form.tagIds" multiple filterable allow-create default-first-option
+            placeholder="选择或输入标签" style="width: 100%">
+            <el-option v-for="tag in myTags" :key="tag.id" :label="tag.name" :value="tag.id" />
+          </el-select>
+        </el-form-item>
       </template>
     </el-form>
 
@@ -71,7 +77,8 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { setMainLink, createNote, updateNote } from '@/api/note'
+import { setMainLink, createNote, updateNote, getMyTags } from '@/api/note'
+import type { Tag } from '@/api/note'
 import { isUrl, autoCompleteUrl, containsSensitiveWords } from '@/utils/helpers'
 import type { NoteItem } from '@/types'
 
@@ -100,7 +107,17 @@ const form = reactive({
   title: '',
   locationOrUrl: '',
   mainUrl: '',
+  tagIds: [] as number[],
 })
+
+const myTags = ref<Tag[]>([])
+
+async function loadTags() {
+  try {
+    const res = await getMyTags()
+    myTags.value = res.data || []
+  } catch { myTags.value = [] }
+}
 
 const linkTip = computed(() => {
   if (form.locationOrUrl && !isUrl(form.locationOrUrl)) {
@@ -130,6 +147,7 @@ function handleTypeChange() {
   form.title = ''
   form.locationOrUrl = ''
   form.mainUrl = ''
+  form.tagIds = []
   formRef.value?.clearValidate()
 }
 
@@ -138,10 +156,18 @@ function handleClose() {
   form.title = ''
   form.locationOrUrl = ''
   form.mainUrl = ''
+  form.tagIds = []
   formRef.value?.resetFields()
 }
 
 // 编辑时回填
+watch(
+  () => props.visible,
+  (val) => {
+    if (val) loadTags()
+  }
+)
+
 watch(
   () => props.editNote,
   (note) => {
@@ -181,12 +207,14 @@ async function handleSubmit() {
         await updateNote(props.editNote.id, {
           title: form.title,
           locationOrUrl: form.locationOrUrl,
+          tagIds: form.tagIds,
         })
         ElMessage.success('笔记更新成功')
       } else {
         await createNote({
           title: form.title,
           locationOrUrl: form.locationOrUrl,
+          tagIds: form.tagIds,
         })
         ElMessage.success('笔记发布成功')
       }

@@ -85,9 +85,12 @@ export interface NoteItem {
   id: number
   userId: number
   username?: string
+  avatar?: string
   title: string
   locationOrUrl: string
   viewCount: number
+  isPinned?: number
+  isDeleted?: number
   createdAt: string
   updatedAt: string
 }
@@ -96,6 +99,7 @@ export interface NoteItem {
 export interface NoteRequest {
   title: string
   locationOrUrl: string
+  tagIds?: number[]
 }
 
 // 搜索结果

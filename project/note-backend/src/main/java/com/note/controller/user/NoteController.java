@@ -76,4 +76,20 @@ public class NoteController {
         noteService.incrementViewCount(noteId);
         return Result.success(null);
     }
+
+    @PutMapping("/{noteId}/pin")
+    @Operation(summary = "置顶笔记", description = "将指定笔记设为置顶")
+    public Result<Void> pinNote(@PathVariable Long noteId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        noteService.pinNote(noteId, userId);
+        return Result.success("置顶成功");
+    }
+
+    @PutMapping("/{noteId}/unpin")
+    @Operation(summary = "取消置顶", description = "取消指定笔记的置顶")
+    public Result<Void> unpinNote(@PathVariable Long noteId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        noteService.unpinNote(noteId, userId);
+        return Result.success("取消置顶成功");
+    }
 }

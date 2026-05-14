@@ -12,7 +12,12 @@
 
     <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="title" label="标题" min-width="180" />
+      <el-table-column prop="title" label="标题" min-width="180">
+        <template #default="{ row }">
+          <el-tag v-if="row.isPinned === 1" type="warning" size="small" style="margin-right: 6px;">置顶</el-tag>
+          {{ row.title }}
+        </template>
+      </el-table-column>
       <el-table-column prop="username" label="所属用户" width="120" />
       <el-table-column prop="locationOrUrl" label="链接/位置" min-width="200" show-overflow-tooltip />
       <el-table-column prop="viewCount" label="浏览量" width="100" />

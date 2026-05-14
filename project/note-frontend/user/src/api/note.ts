@@ -72,3 +72,52 @@ export function globalSearch(params: {
 }): Promise<ApiResponse<SearchResult>> {
   return request.get('/search', params)
 }
+
+// ========== 笔记收藏 ==========
+export function addFavorite(noteId: number): Promise<ApiResponse> {
+  return request.post(`/favorites/${noteId}`)
+}
+
+export function removeFavorite(noteId: number): Promise<ApiResponse> {
+  return request.delete(`/favorites/${noteId}`)
+}
+
+export function getMyFavorites(params: {
+  page?: number
+  size?: number
+}): Promise<ApiResponse<PageResult<NoteItem>>> {
+  return request.get('/favorites', params)
+}
+
+export function checkFavorite(noteId: number): Promise<ApiResponse<boolean>> {
+  return request.get(`/favorites/check/${noteId}`)
+}
+
+// ========== 笔记置顶 ==========
+export function pinNote(noteId: number): Promise<ApiResponse> {
+  return request.put(`/notes/${noteId}/pin`)
+}
+
+export function unpinNote(noteId: number): Promise<ApiResponse> {
+  return request.put(`/notes/${noteId}/unpin`)
+}
+
+// ========== 标签 ==========
+export interface Tag {
+  id: number
+  userId: number
+  name: string
+  createdAt: string
+}
+
+export function getMyTags(): Promise<ApiResponse<Tag[]>> {
+  return request.get('/tags')
+}
+
+export function createTag(name: string): Promise<ApiResponse<Tag>> {
+  return request.post(`/tags?name=${encodeURIComponent(name)}`)
+}
+
+export function deleteTag(tagId: number): Promise<ApiResponse> {
+  return request.delete(`/tags/${tagId}`)
+}

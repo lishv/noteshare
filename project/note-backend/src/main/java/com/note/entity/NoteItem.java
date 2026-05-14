@@ -23,6 +23,8 @@ public class NoteItem {
     @TableLogic
     private Integer isDeleted;
 
+    private Integer isPinned;
+
     private LocalDateTime deletedAt;
 
     @TableField(fill = FieldFill.INSERT)

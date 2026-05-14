@@ -25,7 +25,7 @@ public interface NoteItemMapper extends BaseMapper<NoteItem> {
     @Update("UPDATE t_note_item SET is_deleted = 0, deleted_at = NULL, updated_at = NOW() WHERE id = #{id} AND is_deleted = 1")
     int restoreNote(@Param("id") Long id);
 
-    @Select("SELECT n.id, n.user_id, u.username, n.title, n.location_or_url, n.view_count, n.created_at, n.updated_at " +
+    @Select("SELECT n.id, n.user_id, u.username, u.avatar, n.title, n.location_or_url, n.view_count, n.is_pinned as isPinned, n.created_at, n.updated_at " +
             "FROM t_note_item n LEFT JOIN t_user u ON n.user_id = u.id " +
             "WHERE n.id = #{id} AND n.is_deleted = 0")
     NoteVO selectNoteWithUserById(@Param("id") Long id);

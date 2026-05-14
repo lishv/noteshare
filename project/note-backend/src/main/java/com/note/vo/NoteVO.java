@@ -32,6 +32,9 @@ public class NoteVO {
     @Schema(description = "是否已删除: 0-正常, 1-已删除")
     private Integer isDeleted;
 
+    @Schema(description = "是否置顶: 0-否, 1-是")
+    private Integer isPinned;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
