@@ -363,41 +363,26 @@ async function selectUser(user: User) {
 async function fetchUserDetail(userId: number) {
   if (!userId) return
   contentLoading.value = true
+  mainLink.value = null
+  noteList.value = []
   try {
-    const [linkRes, notesRes] = await Promise.all([
-      getMainLink(userId),
-      getUserNotes(userId, {
-        page: noteCurrentPage.value,
-        size: notePageSize,
-        keyword: localNoteKeyword.value || undefined,
-        startDate: noteDateRange.value?.[0] || undefined,
-        endDate: noteDateRange.value?.[1] || undefined,
-      }),
-    ])
-    mainLink.value = linkRes.data
+    // 独立请求，总链接不存在不影响笔记列表
+    try {
+      const linkRes = await getMainLink(userId)
+      mainLink.value = linkRes.data
+    } catch { mainLink.value = null }
+
+    const notesRes = await getUserNotes(userId, {
+      page: noteCurrentPage.value,
+      size: notePageSize,
+      keyword: localNoteKeyword.value || undefined,
+      startDate: noteDateRange.value?.[0] || undefined,
+      endDate: noteDateRange.value?.[1] || undefined,
+    })
     noteList.value = notesRes.data.list
     totalNotes.value = notesRes.data.total
   } catch (error) {
-    console.warn('API 调用失败（后端服务可能未启动）:', error)
-    // 使用模拟数据进行演示
-    if (userId === 1) {
-      mainLink.value = { id: 1, userId: 1, mainUrl: 'https://notion.so/zhangsan', viewCount: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-      noteList.value = [
-        { id: 1, userId: 1, title: 'Java 基础笔记', locationOrUrl: 'https://notion.so/zhangsan/java', viewCount: 10, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 2, userId: 1, title: 'Vue3 学习笔记', locationOrUrl: '2025/三月份学习计划', viewCount: 5, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      ]
-      totalNotes.value = 2
-    } else if (userId === 2) {
-      mainLink.value = null
-      noteList.value = [
-        { id: 1, userId: 2, title: '英语词汇积累', locationOrUrl: '笔记本第 3 页', viewCount: 3, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      ]
-      totalNotes.value = 1
-    } else {
-      mainLink.value = { id: 3, userId: 3, mainUrl: 'https://feishu.cn/wangwu', viewCount: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-      noteList.value = []
-      totalNotes.value = 0
-    }
+    console.warn('获取笔记列表失败:', error)
   } finally {
     contentLoading.value = false
     loadFavorites()

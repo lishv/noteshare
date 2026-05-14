@@ -8,8 +8,10 @@
         <el-option label="锁定" :value="2" />
       </el-select>
       <el-button type="primary" @click="handleSearch">搜索</el-button>
-      <el-button @click="handleBatchDisable" :disabled="!selectedIds.length" type="danger">批量禁用</el-button>
+      <el-button type="success" @click="showCreateDialog">插入用户</el-button>
+      <el-button @click="handleBatchDisable" :disabled="!selectedIds.length" type="warning">批量禁用</el-button>
       <el-button @click="handleBatchEnable" :disabled="!selectedIds.length" type="success">批量启用</el-button>
+      <el-button @click="handleBatchDelete" :disabled="!selectedIds.length" type="danger">批量删除</el-button>
     </div>
 
     <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
@@ -26,13 +28,14 @@
       <el-table-column prop="noteCount" label="笔记数量" width="100" />
       <el-table-column prop="lastActiveAt" label="最后活跃时间" width="180" />
       <el-table-column prop="createdAt" label="注册时间" width="180" />
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="handleToggleStatus(row)">
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
           <el-button v-if="row.status === 2" link type="warning" @click="handleUnlock(row)">解锁</el-button>
           <el-button link type="primary" @click="handleResetPassword(row)">重置密码</el-button>
+          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -47,13 +50,35 @@
       @current-change="fetchData"
       style="margin-top: 20px; justify-content: flex-end;"
     />
+
+    <!-- 插入用户对话框 -->
+    <el-dialog v-model="createVisible" title="插入用户" width="500px" @closed="resetCreateForm">
+      <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="80px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="createForm.username" placeholder="请输入用户名" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="createForm.password" type="password" show-password placeholder="请输入密码" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="createForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="createForm.phone" placeholder="请输入手机号（选填）" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="createLoading" @click="handleCreate">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList, toggleUserStatus, unlockUser, resetUserPassword, batchToggleUserStatus } from '@/api/admin'
+import { getUserList, toggleUserStatus, unlockUser, resetUserPassword, batchToggleUserStatus, batchDeleteUsers, createUser, deleteUser } from '@/api/admin'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -120,6 +145,17 @@ const handleResetPassword = async (row: any) => {
   }
 }
 
+const handleDelete = async (row: any) => {
+  await ElMessageBox.confirm(`确定删除用户 "${row.username}" 吗？该用户的所有笔记、链接、收藏将被一并删除！`, '警告', { type: 'error' })
+  try {
+    await deleteUser(row.id)
+    ElMessage.success('删除成功')
+    fetchData()
+  } catch (e) {
+    // handled
+  }
+}
+
 const handleBatchDisable = async () => {
   await ElMessageBox.confirm(`确定批量禁用选中的 ${selectedIds.value.length} 个用户吗？`, '提示', { type: 'warning' })
   try {
@@ -138,6 +174,52 @@ const handleBatchEnable = async () => {
   } catch (e) { /* handled */ }
 }
 
+const handleBatchDelete = async () => {
+  await ElMessageBox.confirm(`确定批量删除选中的 ${selectedIds.value.length} 个用户吗？所有笔记、链接、收藏将被一并删除！`, '警告', { type: 'error' })
+  try {
+    await batchDeleteUsers({ ids: selectedIds.value })
+    ElMessage.success('批量删除成功')
+    fetchData()
+  } catch (e) { /* handled */ }
+}
+
+// 插入用户
+const createVisible = ref(false)
+const createLoading = ref(false)
+const createFormRef = ref()
+const createForm = ref({
+  username: '',
+  password: '',
+  email: '',
+  phone: '',
+})
+const createRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, message: '密码至少6位', trigger: 'blur' }],
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email' as const, message: '邮箱格式不正确', trigger: 'blur' }],
+}
+
+const showCreateDialog = () => {
+  createVisible.value = true
+}
+
+const resetCreateForm = () => {
+  createForm.value = { username: '', password: '', email: '', phone: '' }
+}
+
+const handleCreate = async () => {
+  const valid = await createFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  createLoading.value = true
+  try {
+    await createUser(createForm.value)
+    ElMessage.success('创建成功')
+    createVisible.value = false
+    fetchData()
+  } catch { /* handled */ }
+  finally { createLoading.value = false }
+}
+
 onMounted(() => fetchData())
 </script>
 
@@ -149,5 +231,7 @@ onMounted(() => fetchData())
   margin-bottom: 20px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 </style>

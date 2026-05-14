@@ -1,6 +1,8 @@
 package com.note.controller.admin;
 
+import com.note.dto.BatchDeleteDTO;
 import com.note.dto.BatchStatusDTO;
+import com.note.dto.UserCreateDTO;
 import com.note.service.AdminUserService;
 import com.note.vo.ActiveUserVO;
 import com.note.vo.PageResult;
@@ -38,6 +40,26 @@ public class AdminUserController {
     @Operation(summary = "用户详情", description = "获取用户详细信息")
     public Result<UserVO> getUserDetail(@PathVariable Long userId) {
         return Result.success(adminUserService.getUserDetail(userId));
+    }
+
+    @PostMapping
+    @Operation(summary = "创建用户", description = "管理员创建新用户")
+    public Result<Void> createUser(@Valid @RequestBody UserCreateDTO dto, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminUserService.createUser(dto, adminId, adminUsername, ipAddress);
+        return Result.success("创建成功");
+    }
+
+    @DeleteMapping("/{userId}")
+    @Operation(summary = "删除用户", description = "删除用户及其所有笔记、链接、收藏")
+    public Result<Void> deleteUser(@PathVariable Long userId, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminUserService.deleteUser(userId, adminId, adminUsername, ipAddress);
+        return Result.success("删除成功");
     }
 
     @PutMapping("/{userId}/status")
@@ -80,5 +102,15 @@ public class AdminUserController {
         String ipAddress = request.getRemoteAddr();
         adminUserService.batchToggleStatus(dto.getIds(), dto.getStatus(), adminId, adminUsername, ipAddress);
         return Result.success("批量操作成功");
+    }
+
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除用户", description = "批量删除用户及其笔记")
+    public Result<Void> batchDeleteUsers(@Valid @RequestBody BatchDeleteDTO dto, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminUserService.batchDeleteUsers(dto.getIds(), adminId, adminUsername, ipAddress);
+        return Result.success("批量删除成功");
     }
 }

@@ -1,5 +1,6 @@
 package com.note.controller.admin;
 
+import com.note.dto.BatchDeleteDTO;
 import com.note.dto.EditLinkDTO;
 import com.note.service.AdminLinkService;
 import com.note.vo.MainLinkVO;
@@ -51,5 +52,15 @@ public class AdminLinkController {
         String ipAddress = request.getRemoteAddr();
         adminLinkService.deleteLink(linkId, adminId, adminUsername, ipAddress);
         return Result.success("删除成功");
+    }
+
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除链接", description = "批量删除链接")
+    public Result<Void> batchDeleteLinks(@Valid @RequestBody BatchDeleteDTO dto, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminLinkService.batchDeleteLinks(dto.getIds(), adminId, adminUsername, ipAddress);
+        return Result.success("批量删除成功");
     }
 }

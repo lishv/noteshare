@@ -44,6 +44,10 @@ public class FavoriteService {
         return userId != null && favoriteMapper.existsByUserAndNote(userId, noteId) > 0;
     }
 
+    public long countByNoteId(Long noteId) {
+        return favoriteMapper.countByNoteId(noteId);
+    }
+
     public PageResult<NoteVO> listMyFavorites(Long userId, Integer page, Integer size) {
         if (page == null) page = 1;
         if (size == null) size = 10;

@@ -132,6 +132,27 @@ public class AdminManageService {
                 "重置管理员密码: " + admin.getUsername(), "ADMIN", adminId, ipAddress);
     }
 
+    @Transactional
+    public void deleteAdmin(Long adminId, Long operatorId, String operatorUsername, String ipAddress) {
+        Admin admin = adminMapper.selectById(adminId);
+        if (admin == null) {
+            throw new BusinessException(ErrorCode.ADMIN_NOT_FOUND);
+        }
+
+        if ("admin".equals(admin.getUsername())) {
+            throw new BusinessException(ErrorCode.ADMIN_ACCESS_DENIED, "超级管理员不可被删除");
+        }
+
+        if (adminId.equals(operatorId)) {
+            throw new BusinessException(ErrorCode.CANNOT_OPERATE_SELF);
+        }
+
+        adminMapper.deleteById(adminId);
+
+        logOperation(operatorId, operatorUsername, "ADMIN_MANAGE",
+                "删除管理员: " + admin.getUsername(), "ADMIN", adminId, ipAddress);
+    }
+
     private void logOperation(Long adminId, String adminUsername, String operationType,
                               String description, String targetType, Long targetId, String ipAddress) {
         OperationLog log = new OperationLog();

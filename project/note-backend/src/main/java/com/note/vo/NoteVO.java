@@ -35,6 +35,9 @@ public class NoteVO {
     @Schema(description = "是否置顶: 0-否, 1-是")
     private Integer isPinned;
 
+    @Schema(description = "收藏数")
+    private Long favoriteCount;
+
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 

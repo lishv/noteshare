@@ -106,6 +106,22 @@ public class AdminNoteService {
         return noteItemMapper.selectNoteWithUserById(note.getId());
     }
 
+    @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
+    public void pinNote(Long noteId, Long adminId, String adminUsername, String ipAddress) {
+        noteItemMapper.updatePinned(noteId, 1);
+        logOperation(adminId, adminUsername, "NOTE_MANAGE",
+                "置顶笔记ID: " + noteId, "NOTE", noteId, ipAddress);
+    }
+
+    @Transactional
+    @CacheEvict(value = "dashboard", allEntries = true)
+    public void unpinNote(Long noteId, Long adminId, String adminUsername, String ipAddress) {
+        noteItemMapper.updatePinned(noteId, 0);
+        logOperation(adminId, adminUsername, "NOTE_MANAGE",
+                "取消置顶笔记ID: " + noteId, "NOTE", noteId, ipAddress);
+    }
+
     private void logOperation(Long adminId, String adminUsername, String operationType,
                               String description, String targetType, Long targetId, String ipAddress) {
         OperationLog log = new OperationLog();

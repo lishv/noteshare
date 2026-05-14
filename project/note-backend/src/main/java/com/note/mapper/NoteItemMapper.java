@@ -19,6 +19,9 @@ public interface NoteItemMapper extends BaseMapper<NoteItem> {
     @Update("UPDATE t_note_item SET view_count = view_count + 1 WHERE id = #{id} AND is_deleted = 0")
     int incrementViewCount(@Param("id") Long id);
 
+    @Update("UPDATE t_note_item SET is_pinned = #{pinned}, updated_at = NOW() WHERE id = #{id} AND is_deleted = 0")
+    int updatePinned(@Param("id") Long id, @Param("pinned") Integer pinned);
+
     @Update("UPDATE t_note_item SET is_deleted = 1, deleted_at = #{deletedAt}, updated_at = NOW() WHERE id = #{id} AND is_deleted = 0")
     int logicalDelete(@Param("id") Long id, @Param("deletedAt") LocalDateTime deletedAt);
 

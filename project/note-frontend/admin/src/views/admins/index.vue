@@ -21,7 +21,7 @@
       </el-table-column>
       <el-table-column prop="lastLoginAt" label="最后登录" width="180" />
       <el-table-column prop="createdAt" label="创建时间" width="180" />
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <template v-if="row.username === 'admin'">
             <el-tag type="info" size="small">默认超管</el-tag>
@@ -32,6 +32,7 @@
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
             <el-button link type="warning" @click="handleResetPassword(row)">重置密码</el-button>
+            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </template>
       </el-table-column>
@@ -103,7 +104,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getAdminList, createAdmin, editAdmin, toggleAdminStatus, resetAdminPassword } from '@/api/admin'
+import { getAdminList, createAdmin, editAdmin, toggleAdminStatus, resetAdminPassword, deleteAdmin } from '@/api/admin'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -196,6 +197,17 @@ const handleResetPassword = async (row: any) => {
   try {
     await resetAdminPassword(row.id)
     ElMessage.success('重置密码成功')
+    fetchData()
+  } catch (e) {
+    // handled
+  }
+}
+
+const handleDelete = async (row: any) => {
+  await ElMessageBox.confirm(`确定删除管理员 "${row.username}" 吗？此操作不可恢复！`, '警告', { type: 'error' })
+  try {
+    await deleteAdmin(row.id)
+    ElMessage.success('删除成功')
     fetchData()
   } catch (e) {
     // handled

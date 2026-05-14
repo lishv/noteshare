@@ -19,12 +19,17 @@ export const getUserActivity = () => request.get('/dashboard/user-activity')
 export const getUserList = (params: { page?: number; size?: number; keyword?: string; status?: number }) =>
   request.get('/users', { params })
 export const getUserDetail = (userId: number) => request.get(`/users/${userId}`)
+export const createUser = (data: { username: string; password: string; email: string; phone?: string }) =>
+  request.post('/users', data)
+export const deleteUser = (userId: number) => request.delete(`/users/${userId}`)
 export const toggleUserStatus = (userId: number, status: number) =>
   request.put(`/users/${userId}/status`, null, { params: { status } })
 export const unlockUser = (userId: number) => request.post(`/users/${userId}/unlock`)
 export const resetUserPassword = (userId: number) => request.put(`/users/${userId}/reset-password`)
 export const batchToggleUserStatus = (data: { ids: number[]; status: number }) =>
   request.put('/users/batch/status', data)
+export const batchDeleteUsers = (data: { ids: number[] }) =>
+  request.delete('/users/batch', { data })
 
 // 笔记管理
 export const getNoteList = (params: { page?: number; size?: number; keyword?: string; isDeleted?: number }) =>
@@ -34,14 +39,18 @@ export const createNote = (userId: number, data: { title: string; locationOrUrl:
   request.post(`/notes?userId=${userId}`, data)
 export const deleteNote = (noteId: number) => request.put(`/notes/${noteId}/delete`)
 export const restoreNote = (noteId: number) => request.put(`/notes/${noteId}/restore`)
-export const batchDeleteNotes = (data: { ids: number[] }) => request.put('/notes/batch-delete', data)
-export const batchRestoreNotes = (data: { ids: number[] }) => request.put('/notes/batch-restore', data)
+export const pinNote = (noteId: number) => request.put(`/notes/${noteId}/pin`)
+export const unpinNote = (noteId: number) => request.put(`/notes/${noteId}/unpin`)
+export const batchDeleteNotes = (data: { ids: number[] }) => request.put('/notes/batch/delete', data)
+export const batchRestoreNotes = (data: { ids: number[] }) => request.put('/notes/batch/restore', data)
+export const getNoteFavoriteCount = (noteId: number) => request.get(`/notes/${noteId}/favorites`)
 
 // 链接管理
 export const getLinkList = (params: { page?: number; size?: number; keyword?: string }) =>
   request.get('/links', { params })
 export const editLink = (linkId: number, data: { mainUrl: string }) => request.put(`/links/${linkId}`, data)
 export const deleteLink = (linkId: number) => request.delete(`/links/${linkId}`)
+export const batchDeleteLinks = (data: { ids: number[] }) => request.delete('/links/batch', { data })
 
 // 敏感词管理
 export const getWordList = (params: { page?: number; size?: number; keyword?: string; type?: number; status?: number }) =>
@@ -78,6 +87,7 @@ export const createAdmin = (data: { username: string; password: string; email?: 
   request.post('/admins', data)
 export const editAdmin = (adminId: number, data: { email?: string; phone?: string; role?: number }) =>
   request.put(`/admins/${adminId}`, data)
+export const deleteAdmin = (adminId: number) => request.delete(`/admins/${adminId}`)
 export const toggleAdminStatus = (adminId: number, status: number) =>
   request.put(`/admins/${adminId}/status`, null, { params: { status } })
 export const resetAdminPassword = (adminId: number) => request.put(`/admins/${adminId}/reset-password`)

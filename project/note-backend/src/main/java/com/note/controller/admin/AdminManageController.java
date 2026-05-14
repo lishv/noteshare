@@ -94,4 +94,15 @@ public class AdminManageController {
         adminManageService.resetAdminPassword(adminId, operatorId, operatorUsername, ipAddress);
         return Result.success("密码已重置为默认密码");
     }
+
+    @DeleteMapping("/{adminId}")
+    @Operation(summary = "删除管理员", description = "删除管理员（超管专用）")
+    public Result<Void> deleteAdmin(@PathVariable Long adminId, HttpServletRequest request) {
+        checkSuperAdmin(request);
+        Long operatorId = (Long) request.getAttribute("adminId");
+        String operatorUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminManageService.deleteAdmin(adminId, operatorId, operatorUsername, ipAddress);
+        return Result.success("删除成功");
+    }
 }

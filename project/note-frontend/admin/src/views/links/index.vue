@@ -3,9 +3,11 @@
     <div class="search-bar">
       <el-input v-model="keyword" placeholder="搜索链接" clearable @keyup.enter="handleSearch" style="width: 300px; margin-right: 10px;" />
       <el-button type="primary" @click="handleSearch">搜索</el-button>
+      <el-button type="danger" :disabled="!selectedIds.length" @click="handleBatchDelete">批量删除</el-button>
     </div>
 
-    <el-table :data="tableData" v-loading="loading" stripe>
+    <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
+      <el-table-column type="selection" width="55" />
       <el-table-column prop="username" label="所属用户" width="120" />
       <el-table-column prop="mainUrl" label="链接URL" min-width="250" />
       <el-table-column prop="viewCount" label="浏览量" width="100" />
@@ -46,7 +48,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getLinkList, editLink, deleteLink } from '@/api/admin'
+import { getLinkList, editLink, deleteLink, batchDeleteLinks } from '@/api/admin'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -54,6 +56,7 @@ const page = ref(1)
 const size = ref(20)
 const total = ref(0)
 const tableData = ref<any[]>([])
+const selectedIds = ref<number[]>([])
 const editDialogVisible = ref(false)
 const editForm = reactive<{ id: number; mainUrl: string }>({ id: 0, mainUrl: '' })
 
@@ -73,6 +76,10 @@ const fetchData = async () => {
 const handleSearch = () => {
   page.value = 1
   fetchData()
+}
+
+const handleSelectionChange = (rows: any[]) => {
+  selectedIds.value = rows.map(r => r.id)
 }
 
 const handleEdit = (row: any) => {
@@ -97,6 +104,17 @@ const handleDelete = async (row: any) => {
   try {
     await deleteLink(row.id)
     ElMessage.success('删除成功')
+    fetchData()
+  } catch (e) {
+    // handled
+  }
+}
+
+const handleBatchDelete = async () => {
+  await ElMessageBox.confirm(`确定批量删除选中的 ${selectedIds.value.length} 条链接吗？`, '提示', { type: 'warning' })
+  try {
+    await batchDeleteLinks({ ids: selectedIds.value })
+    ElMessage.success('批量删除成功')
     fetchData()
   } catch (e) {
     // handled

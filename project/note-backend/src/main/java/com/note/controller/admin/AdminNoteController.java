@@ -3,6 +3,7 @@ package com.note.controller.admin;
 import com.note.dto.BatchDeleteDTO;
 import com.note.dto.NoteDTO;
 import com.note.service.AdminNoteService;
+import com.note.service.FavoriteService;
 import com.note.vo.NoteVO;
 import com.note.vo.PageResult;
 import com.note.vo.Result;
@@ -19,9 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class AdminNoteController {
 
     private final AdminNoteService adminNoteService;
+    private final FavoriteService favoriteService;
 
-    public AdminNoteController(AdminNoteService adminNoteService) {
+    public AdminNoteController(AdminNoteService adminNoteService, FavoriteService favoriteService) {
         this.adminNoteService = adminNoteService;
+        this.favoriteService = favoriteService;
     }
 
     @GetMapping
@@ -91,5 +94,31 @@ public class AdminNoteController {
         String ipAddress = request.getRemoteAddr();
         adminNoteService.batchRestoreNotes(dto.getIds(), adminId, adminUsername, ipAddress);
         return Result.success("批量恢复成功");
+    }
+
+    @PutMapping("/{noteId}/pin")
+    @Operation(summary = "置顶笔记", description = "置顶指定笔记")
+    public Result<Void> pinNote(@PathVariable Long noteId, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminNoteService.pinNote(noteId, adminId, adminUsername, ipAddress);
+        return Result.success("置顶成功");
+    }
+
+    @PutMapping("/{noteId}/unpin")
+    @Operation(summary = "取消置顶笔记", description = "取消置顶指定笔记")
+    public Result<Void> unpinNote(@PathVariable Long noteId, HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminNoteService.unpinNote(noteId, adminId, adminUsername, ipAddress);
+        return Result.success("取消置顶成功");
+    }
+
+    @GetMapping("/{noteId}/favorites")
+    @Operation(summary = "笔记收藏数", description = "获取指定笔记的收藏数")
+    public Result<Long> getNoteFavoriteCount(@PathVariable Long noteId) {
+        return Result.success(favoriteService.countByNoteId(noteId));
     }
 }

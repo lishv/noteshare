@@ -9,7 +9,7 @@
       ref="formRef"
       :model="form"
       :rules="rules"
-      label-width="80px"
+      label-width="90px"
     >
       <!-- 操作类型选择 -->
       <el-form-item label="操作类型">
@@ -54,12 +54,6 @@
             show-icon
             class="form-alert"
           />
-        </el-form-item>
-        <el-form-item label="标签">
-          <el-select v-model="form.tagIds" multiple filterable allow-create default-first-option
-            placeholder="选择或输入标签" style="width: 100%">
-            <el-option v-for="tag in myTags" :key="tag.id" :label="tag.name" :value="tag.id" />
-          </el-select>
         </el-form-item>
       </template>
     </el-form>

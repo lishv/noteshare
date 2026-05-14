@@ -35,7 +35,8 @@
 
     <select id="selectNotePageAdmin" resultType="com.note.vo.NoteVO">
         SELECT n.id, n.user_id, u.username, n.title, n.location_or_url,
-               n.view_count as viewCount, n.is_pinned as isPinned, n.is_deleted, n.created_at, n.updated_at
+               n.view_count as viewCount, n.is_pinned as isPinned, n.is_deleted, n.created_at, n.updated_at,
+               (SELECT COUNT(*) FROM t_note_favorite f WHERE f.note_id = n.id) as favoriteCount
         FROM t_note_item n
         LEFT JOIN t_user u ON n.user_id = u.id
         <where>

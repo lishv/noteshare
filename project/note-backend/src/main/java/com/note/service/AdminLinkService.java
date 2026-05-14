@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AdminLinkService {
@@ -64,6 +65,17 @@ public class AdminLinkService {
 
         logOperation(adminId, adminUsername, "LINK_MANAGE",
                 "删除链接ID: " + linkId, "MAIN_LINK", linkId, ipAddress);
+    }
+
+    @Transactional
+    @CacheEvict(value = {"dashboard", "stats"}, allEntries = true)
+    public void batchDeleteLinks(List<Long> linkIds, Long adminId, String adminUsername, String ipAddress) {
+        for (Long linkId : linkIds) {
+            mainLinkMapper.deleteById(linkId);
+        }
+
+        logOperation(adminId, adminUsername, "LINK_MANAGE",
+                "批量删除链接，数量: " + linkIds.size(), "MAIN_LINK", null, ipAddress);
     }
 
     private void logOperation(Long adminId, String adminUsername, String operationType,

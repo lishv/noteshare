@@ -18,7 +18,7 @@
       <el-button type="primary" @click="handleSearch">搜索</el-button>
       <el-button type="success" @click="showCreateDialog">新增</el-button>
       <el-button type="warning" @click="showBatchImportDialog">批量导入</el-button>
-      <el-button @click="handleBatchAction" :disabled="!selectedIds.length">批量操作</el-button>
+      <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedIds.length">批量删除</el-button>
     </div>
 
     <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
@@ -87,12 +87,25 @@
 
     <!-- Batch Import Dialog -->
     <el-dialog v-model="batchImportDialogVisible" title="批量导入" width="500px">
-      <el-input
-        v-model="batchImportText"
-        type="textarea"
-        :rows="8"
-        placeholder="每行一个敏感词"
-      />
+      <el-form :model="batchImportForm" label-width="80px">
+        <el-form-item label="分类">
+          <el-select v-model="batchImportForm.type" style="width: 100%;">
+            <el-option label="政治" :value="1" />
+            <el-option label="色情" :value="2" />
+            <el-option label="暴力" :value="3" />
+            <el-option label="广告" :value="4" />
+            <el-option label="其他" :value="5" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="敏感词">
+          <el-input
+            v-model="batchImportText"
+            type="textarea"
+            :rows="8"
+            placeholder="每行一个敏感词"
+          />
+        </el-form-item>
+      </el-form>
       <template #footer>
         <el-button @click="batchImportDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitBatchImport">导入</el-button>
@@ -106,7 +119,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getWordList, createWord, updateWord, deleteWord, toggleWordStatus,
-  batchImportWords, batchToggleWordStatus, batchDeleteWords,
+  batchImportWords, batchDeleteWords,
 } from '@/api/admin'
 
 const loading = ref(false)
@@ -126,6 +139,7 @@ let editingId = 0
 
 const batchImportDialogVisible = ref(false)
 const batchImportText = ref('')
+const batchImportForm = reactive({ type: 5 })
 
 const typeMap: Record<number, string> = { 1: '政治', 2: '色情', 3: '暴力', 4: '广告', 5: '其他' }
 const getTypeName = (t: number) => typeMap[t] || '未知'
@@ -214,11 +228,11 @@ const handleDelete = async (row: any) => {
   }
 }
 
-const handleBatchAction = async () => {
-  await ElMessageBox.confirm(`确定对选中的 ${selectedIds.value.length} 条敏感词执行批量操作吗？`, '提示', { type: 'warning' })
+const handleBatchDelete = async () => {
+  await ElMessageBox.confirm(`确定删除选中的 ${selectedIds.value.length} 条敏感词吗？`, '提示', { type: 'warning' })
   try {
-    await batchToggleWordStatus({ ids: selectedIds.value, status: 1 })
-    ElMessage.success('操作成功')
+    await batchDeleteWords({ ids: selectedIds.value })
+    ElMessage.success('批量删除成功')
     fetchData()
   } catch (e) {
     // handled
@@ -227,6 +241,7 @@ const handleBatchAction = async () => {
 
 const showBatchImportDialog = () => {
   batchImportText.value = ''
+  batchImportForm.type = 5
   batchImportDialogVisible.value = true
 }
 
@@ -237,7 +252,7 @@ const submitBatchImport = async () => {
     return
   }
   try {
-    await batchImportWords({ words })
+    await batchImportWords({ words, type: batchImportForm.type })
     ElMessage.success('导入成功')
     batchImportDialogVisible.value = false
     fetchData()
