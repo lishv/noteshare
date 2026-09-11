@@ -28,16 +28,28 @@ public interface NoteItemMapper extends BaseMapper<NoteItem> {
     @Update("UPDATE t_note_item SET is_deleted = 0, deleted_at = NULL, updated_at = NOW() WHERE id = #{id} AND is_deleted = 1")
     int restoreNote(@Param("id") Long id);
 
-    @Select("SELECT n.id, n.user_id, u.username, u.avatar, n.title, n.location_or_url, n.view_count, n.is_pinned as isPinned, n.created_at, n.updated_at " +
+    @Select("SELECT n.id, n.user_id, u.username, u.avatar, n.title, n.note_type, n.location_or_url, n.content, n.summary, n.cover_image, n.view_count, n.is_pinned as isPinned, n.is_public as isPublic, n.created_at, n.updated_at " +
             "FROM t_note_item n LEFT JOIN t_user u ON n.user_id = u.id " +
             "WHERE n.id = #{id} AND n.is_deleted = 0")
     NoteVO selectNoteWithUserById(@Param("id") Long id);
 
-    IPage<NoteVO> selectNotePageWithUser(Page<NoteVO> page, @Param("userId") Long userId, @Param("keyword") String keyword, @Param("startDate") String startDate, @Param("endDate") String endDate);
+    IPage<NoteVO> selectNotePageWithUser(Page<NoteVO> page,
+                                         @Param("userId") Long userId,
+                                         @Param("currentUserId") Long currentUserId,
+                                         @Param("keyword") String keyword,
+                                         @Param("noteType") Integer noteType,
+                                         @Param("startDate") String startDate,
+                                         @Param("endDate") String endDate);
 
-    IPage<NoteVO> searchNotesWithUser(Page<NoteVO> page, @Param("keyword") String keyword);
+    IPage<NoteVO> searchNotesWithUser(Page<NoteVO> page,
+                                      @Param("keyword") String keyword,
+                                      @Param("currentUserId") Long currentUserId);
 
-    IPage<NoteVO> selectNotePageAdmin(Page<NoteVO> page, @Param("keyword") String keyword, @Param("isDeleted") Integer isDeleted);
+    IPage<NoteVO> selectNotePageAdmin(Page<NoteVO> page,
+                                      @Param("keyword") String keyword,
+                                      @Param("noteType") Integer noteType,
+                                      @Param("isPublic") Integer isPublic,
+                                      @Param("isDeleted") Integer isDeleted);
 
     List<NoteVO> selectTopNotes(@Param("limit") Integer limit);
 

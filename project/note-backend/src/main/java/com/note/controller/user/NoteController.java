@@ -38,16 +38,22 @@ public class NoteController {
             @Parameter(description = "页码") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页大小") @RequestParam(required = false) Integer size,
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "笔记类型: 1-链接, 2-创作") @RequestParam(required = false) Integer noteType,
             @Parameter(description = "开始日期 yyyy-MM-dd") @RequestParam(required = false) String startDate,
-            @Parameter(description = "结束日期 yyyy-MM-dd") @RequestParam(required = false) String endDate) {
-        PageResult<NoteVO> result = noteService.getUserNotes(userId, page, size, keyword, startDate, endDate);
+            @Parameter(description = "结束日期 yyyy-MM-dd") @RequestParam(required = false) String endDate,
+            HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        PageResult<NoteVO> result = noteService.getUserNotes(userId, currentUserId, page, size, keyword, noteType, startDate, endDate);
         return Result.success(result);
     }
 
     @GetMapping("/{noteId}")
     @Operation(summary = "获取笔记详情", description = "根据ID获取笔记详细信息")
-    public Result<NoteVO> getNote(@Parameter(description = "笔记ID") @PathVariable Long noteId) {
-        NoteVO result = noteService.getNoteById(noteId);
+    public Result<NoteVO> getNote(
+            @Parameter(description = "笔记ID") @PathVariable Long noteId,
+            HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        NoteVO result = noteService.getNoteById(noteId, currentUserId);
         return Result.success(result);
     }
 

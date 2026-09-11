@@ -21,6 +21,8 @@ public class User {
 
     private String avatar;
 
+    private String bio;
+
     private Integer status;
 
     private LocalDateTime lastActiveAt;

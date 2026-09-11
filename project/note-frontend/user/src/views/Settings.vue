@@ -3,6 +3,34 @@
     <div class="settings-container">
       <h2>个人设置</h2>
       <el-tabs v-model="activeTab">
+        <!-- 个人资料/个性签名 -->
+        <el-tab-pane label="个人资料" name="profile">
+          <div class="settings-form-wrapper">
+            <el-form label-width="100px" class="settings-form">
+              <el-form-item label="用户名">
+                <el-input :model-value="userInfo?.username" disabled />
+              </el-form-item>
+              <el-form-item label="电子邮箱">
+                <el-input :model-value="userInfo?.email" disabled />
+              </el-form-item>
+              <el-form-item label="个性签名">
+                <el-input
+                  v-model="userBio"
+                  maxlength="30"
+                  show-word-limit
+                  placeholder="请输入个性签名（最多30字）"
+                  clearable
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" :loading="bioLoading" @click="handleUpdateBio">
+                  保存个性签名
+                </el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+
         <!-- 修改头像 -->
         <el-tab-pane label="修改头像" name="avatar">
           <div class="avatar-section">
@@ -146,23 +174,47 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules, UploadFile } from 'element-plus'
-import { changePassword, sendVerificationCode, uploadAvatar } from '@/api/user'
+import { changePassword, sendVerificationCode, uploadAvatar, updateUserBio } from '@/api/user'
 import { useUserStore } from '@/store/user'
 
 const router = useRouter()
 const userStore = useUserStore()
 const userInfo = ref(userStore.userInfo)
-const activeTab = ref('avatar')
+const activeTab = ref('profile')
 const defaultAvatar = ''
 const avatarUrl = ref(userInfo.value?.avatar || '')
 const previewUrl = ref('')
 const selectedFile = ref<File | null>(null)
 const uploadLoading = ref(false)
 
+// 个性签名
+const userBio = ref(userInfo.value?.bio || '')
+const bioLoading = ref(false)
+
+async function handleUpdateBio() {
+  const bio = userBio.value ? userBio.value.trim() : ''
+  if (bio.length > 30) {
+    ElMessage.warning('个性签名不能超过30个字符')
+    return
+  }
+  bioLoading.value = true
+  try {
+    const res = await updateUserBio(bio)
+    userStore.setUserInfo(res.data)
+    userInfo.value = res.data
+    userBio.value = res.data.bio || ''
+    ElMessage.success('个性签名修改成功')
+  } catch {
+    // 错误由拦截器统一处理
+  } finally {
+    bioLoading.value = false
+  }
+}
+
 const hasUnsavedChanges = computed(() =>
   !!(passwordForm.oldPassword || passwordForm.newPassword || passwordForm.confirmPassword ||
      resetForm.email || resetForm.verificationCode || resetForm.newPassword || resetForm.confirmPassword ||
-     selectedFile.value)
+     selectedFile.value || (userBio.value !== (userInfo.value?.bio || '')))
 )
 
 function beforeUnloadHandler(e: BeforeUnloadEvent) {
@@ -176,6 +228,7 @@ onMounted(() => {
   userStore.fetchUserInfo().then(() => {
     userInfo.value = userStore.userInfo
     avatarUrl.value = userInfo.value?.avatar || ''
+    userBio.value = userInfo.value?.bio || ''
   })
 })
 
@@ -263,10 +316,12 @@ async function handleChangePassword() {
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword,
     })
-    ElMessage.success('密码修改成功')
+    ElMessage.success('密码修改成功，请重新登录')
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
+    userStore.logout()
+    router.push('/login')
   } catch {
     // 错误已由拦截器处理
   } finally {

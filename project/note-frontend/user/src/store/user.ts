@@ -21,6 +21,12 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = user
   }
 
+  function setBio(bio: string) {
+    if (userInfo.value) {
+      userInfo.value.bio = bio
+    }
+  }
+
   async function fetchUserInfo() {
     try {
       const res = await getCurrentUser()
@@ -46,6 +52,7 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn,
     setToken,
     setUserInfo,
+    setBio,
     fetchUserInfo,
     logout,
   }

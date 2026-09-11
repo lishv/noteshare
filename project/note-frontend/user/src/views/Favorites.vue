@@ -6,11 +6,30 @@
     </div>
 
     <el-table :data="notes" v-loading="loading" stripe>
-      <el-table-column prop="title" label="标题" min-width="180" />
-      <el-table-column prop="username" label="作者" width="120" />
-      <el-table-column prop="locationOrUrl" label="链接/位置" min-width="200" show-overflow-tooltip>
+      <el-table-column prop="title" label="标题" min-width="180">
         <template #default="{ row }">
-          <a v-if="isUrl(row.locationOrUrl)" :href="row.locationOrUrl" target="_blank" rel="noopener">{{ row.locationOrUrl }}</a>
+          <el-tag :type="row.noteType === 2 ? 'success' : 'info'" size="small" style="margin-right: 6px;">
+            {{ row.noteType === 2 ? '原创' : '外链' }}
+          </el-tag>
+          <span
+            :style="row.noteType === 2 ? 'cursor: pointer; color: #409eff;' : ''"
+            @click="row.noteType === 2 && router.push(`/note/${row.id}`)"
+          >
+            {{ row.title }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="username" label="作者" width="120" />
+      <el-table-column prop="locationOrUrl" label="内容/位置" min-width="200" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span
+            v-if="row.noteType === 2"
+            style="cursor: pointer; color: #606266;"
+            @click="router.push(`/note/${row.id}`)"
+          >
+            {{ row.summary || '在线创作笔记' }}
+          </span>
+          <a v-else-if="isUrl(row.locationOrUrl)" :href="row.locationOrUrl" target="_blank" rel="noopener">{{ row.locationOrUrl }}</a>
           <span v-else>{{ row.locationOrUrl }}</span>
         </template>
       </el-table-column>

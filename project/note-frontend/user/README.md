@@ -1,6 +1,6 @@
-# 学生笔记共享平台 - 前端
+# 笔记共享平台 - 前端
 
-基于 Vue 3 + TypeScript + Element Plus 的学生笔记共享平台前端项目。
+基于 Vue 3 + TypeScript + Element Plus 的笔记共享平台前端项目。
 
 ## 技术栈
 

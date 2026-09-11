@@ -13,11 +13,14 @@ import com.note.mapper.AdminMapper;
 import com.note.mapper.OperationLogMapper;
 import com.note.vo.AdminManageVO;
 import com.note.vo.PageResult;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
 public class AdminManageService {
@@ -25,10 +28,17 @@ public class AdminManageService {
     private final AdminMapper adminMapper;
     private final OperationLogMapper operationLogMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public AdminManageService(AdminMapper adminMapper, OperationLogMapper operationLogMapper) {
+    @Value("${default.adminPassword:admin123}")
+    private String defaultAdminPassword;
+
+    private static final String ADMIN_LOGIN_FAIL_KEY = "admin:login:fail:";
+
+    public AdminManageService(AdminMapper adminMapper, OperationLogMapper operationLogMapper, RedisTemplate<String, Object> redisTemplate) {
         this.adminMapper = adminMapper;
         this.operationLogMapper = operationLogMapper;
+        this.redisTemplate = redisTemplate;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
@@ -108,6 +118,19 @@ public class AdminManageService {
         admin.setUpdatedAt(LocalDateTime.now());
         adminMapper.updateById(admin);
 
+        if (status == 1) {
+            try {
+                Set<String> keys = redisTemplate.keys(ADMIN_LOGIN_FAIL_KEY + admin.getUsername() + ":*");
+                if (keys != null && !keys.isEmpty()) {
+                    redisTemplate.delete(keys);
+                }
+            } catch (Exception ignored) {}
+        } else {
+            try {
+                redisTemplate.opsForValue().set("admin:token:invalid_before:" + admin.getId(), System.currentTimeMillis(), 7, java.util.concurrent.TimeUnit.DAYS);
+            } catch (Exception ignored) {}
+        }
+
         logOperation(operatorId, operatorUsername, "ADMIN_MANAGE",
                 (status == 0 ? "禁用" : "启用") + "管理员: " + admin.getUsername(),
                 "ADMIN", adminId, ipAddress);
@@ -124,9 +147,18 @@ public class AdminManageService {
             throw new BusinessException(ErrorCode.ADMIN_ACCESS_DENIED, "默认超级管理员密码不可被重置");
         }
 
-        admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setPassword(passwordEncoder.encode(defaultAdminPassword != null ? defaultAdminPassword : "admin123"));
+        admin.setStatus(1);
         admin.setUpdatedAt(LocalDateTime.now());
         adminMapper.updateById(admin);
+
+        try {
+            redisTemplate.opsForValue().set("admin:token:invalid_before:" + admin.getId(), System.currentTimeMillis(), 7, java.util.concurrent.TimeUnit.DAYS);
+            Set<String> keys = redisTemplate.keys(ADMIN_LOGIN_FAIL_KEY + admin.getUsername() + ":*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception ignored) {}
 
         logOperation(operatorId, operatorUsername, "ADMIN_MANAGE",
                 "重置管理员密码: " + admin.getUsername(), "ADMIN", adminId, ipAddress);

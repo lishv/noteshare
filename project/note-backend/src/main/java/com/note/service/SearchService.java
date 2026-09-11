@@ -20,7 +20,7 @@ public class SearchService {
         this.noteItemMapper = noteItemMapper;
     }
 
-    public SearchVO search(String keyword, Integer page, Integer size) {
+    public SearchVO search(String keyword, Long currentUserId, Integer page, Integer size) {
         if (page == null) page = 1;
         if (size == null) size = 20;
 
@@ -33,7 +33,7 @@ public class SearchService {
         result.setUsers(userResult.getRecords());
 
         Page<NoteVO> notePage = new Page<>(1, 10);
-        IPage<NoteVO> noteResult = noteItemMapper.searchNotesWithUser(notePage, keyword);
+        IPage<NoteVO> noteResult = noteItemMapper.searchNotesWithUser(notePage, keyword, currentUserId);
         result.setNotes(noteResult.getRecords());
 
         result.setTotal(userResult.getTotal() + noteResult.getTotal());

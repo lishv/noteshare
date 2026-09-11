@@ -6,6 +6,9 @@ CREATE DATABASE IF NOT EXISTS `note_sharing` DEFAULT CHARACTER SET utf8mb4 COLLA
 USE `note_sharing`;
 
 -- 删除已存在的表（按依赖顺序）
+DROP TABLE IF EXISTS `t_comment`;
+DROP TABLE IF EXISTS `t_note_tag`;
+DROP TABLE IF EXISTS `t_favorite`;
 DROP TABLE IF EXISTS `t_note_item`;
 DROP TABLE IF EXISTS `t_main_link`;
 DROP TABLE IF EXISTS `t_login_fail_record`;
@@ -20,6 +23,7 @@ CREATE TABLE `t_user` (
   `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
   `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
   `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像 URL',
+  `bio` VARCHAR(100) DEFAULT NULL COMMENT '个性签名 (最多30字)',
   `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-正常，0-禁用，2-锁定',
   `last_active_at` DATETIME DEFAULT NULL COMMENT '最后活跃时间 (用于排序)',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -50,19 +54,47 @@ CREATE TABLE `t_note_item` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '笔记 ID',
   `user_id` BIGINT NOT NULL COMMENT '用户 ID',
   `title` VARCHAR(100) NOT NULL COMMENT '笔记名称',
-  `location_or_url` VARCHAR(500) NOT NULL COMMENT '位置或链接',
+  `note_type` TINYINT NOT NULL DEFAULT 1 COMMENT '笔记类型：1-链接笔记, 2-创作笔记(Markdown)',
+  `location_or_url` VARCHAR(500) DEFAULT NULL COMMENT '位置或链接',
+  `content` MEDIUMTEXT DEFAULT NULL COMMENT '笔记正文内容 (Markdown格式)',
+  `summary` VARCHAR(500) DEFAULT NULL COMMENT '笔记摘要',
+  `cover_image` VARCHAR(255) DEFAULT NULL COMMENT '封面图URL',
   `view_count` BIGINT NOT NULL DEFAULT 0 COMMENT '浏览次数',
   `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：1-已删除，0-未删除',
+  `is_pinned` TINYINT NOT NULL DEFAULT 0 COMMENT '是否置顶：1-已置顶，0-未置顶',
+  `is_public` TINYINT NOT NULL DEFAULT 1 COMMENT '是否公开：1-公开，0-私密',
   `deleted_at` DATETIME DEFAULT NULL COMMENT '删除时间',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `idx_user_id_updated_at` (`user_id`, `updated_at`),
   KEY `idx_user_id` (`user_id`),
+  KEY `idx_note_type` (`note_type`),
+  KEY `idx_is_public` (`is_public`),
   KEY `idx_updated_at` (`updated_at`),
   KEY `idx_is_deleted` (`is_deleted`),
   CONSTRAINT `fk_note_item_user` FOREIGN KEY (`user_id`) REFERENCES `t_user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='笔记表';
+
+-- 笔记评论表
+CREATE TABLE `t_comment` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '评论 ID',
+  `note_id` BIGINT NOT NULL COMMENT '所属笔记 ID',
+  `user_id` BIGINT NOT NULL COMMENT '发表评论的用户 ID',
+  `parent_id` BIGINT DEFAULT NULL COMMENT '根评论 ID (顶级评论为 NULL)',
+  `reply_to_user_id` BIGINT DEFAULT NULL COMMENT '被回复的目标用户 ID',
+  `reply_to_comment_id` BIGINT DEFAULT NULL COMMENT '被回复的具体评论 ID',
+  `content` VARCHAR(1000) NOT NULL COMMENT '评论正文',
+  `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除：0-正常，1-已删除',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_note_created` (`note_id`, `created_at`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_parent_id` (`parent_id`),
+  CONSTRAINT `fk_comment_note` FOREIGN KEY (`note_id`) REFERENCES `t_note_item` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `t_user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='笔记评论表';
 
 -- 登录失败记录表
 CREATE TABLE `t_login_fail_record` (
@@ -89,6 +121,20 @@ CREATE TABLE `t_sensitive_word` (
   KEY `idx_word` (`word`),
   KEY `idx_type_status` (`type`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='敏感词表';
+
+-- 用户关注表
+CREATE TABLE `t_user_follow` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
+  `follower_id` BIGINT NOT NULL COMMENT '关注者用户 ID (粉丝)',
+  `following_id` BIGINT NOT NULL COMMENT '被关注的目标用户 ID (作者)',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '关注时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_follower_following` (`follower_id`, `following_id`),
+  KEY `idx_follower_id` (`follower_id`),
+  KEY `idx_following_id` (`following_id`),
+  CONSTRAINT `fk_follow_follower` FOREIGN KEY (`follower_id`) REFERENCES `t_user` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_follow_following` FOREIGN KEY (`following_id`) REFERENCES `t_user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户关注表';
 
 -- ====================================
 -- 插入测试数据

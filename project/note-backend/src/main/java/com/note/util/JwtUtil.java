@@ -49,6 +49,11 @@ public class JwtUtil {
         return claims.get("username", String.class);
     }
 
+    public Date getIssuedAtFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.getIssuedAt();
+    }
+
     public long getTokenRemainingSeconds(String token) {
         try {
             Claims claims = getClaimsFromToken(token);

@@ -36,6 +36,11 @@ export function uploadAvatar(file: File): Promise<ApiResponse<User>> {
   return request.post('/upload/avatar', formData)
 }
 
+// 修改个性签名
+export function updateUserBio(bio: string): Promise<ApiResponse<User>> {
+  return request.put('/users/bio', { bio })
+}
+
 // 发送验证码
 export function sendVerificationCode(data: SendCodeRequest): Promise<ApiResponse> {
   return request.post('/auth/send-code', data)

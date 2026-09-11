@@ -1,8 +1,9 @@
 package com.note.util;
 
 import com.aliyun.oss.*;
+import com.aliyun.oss.common.auth.CredentialsProvider;
 import com.aliyun.oss.common.auth.CredentialsProviderFactory;
-import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
+import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.common.comm.SignVersion;
 
 import com.note.config.AliyunOssProperties;
@@ -22,8 +23,17 @@ public class AliyunOSSOperator {
         String endpoint=aliyunOssProperties.getEndpoint();
         String bucketName=aliyunOssProperties.getBucketName();
         String region=aliyunOssProperties.getRegion();
-        // 从环境变量中获取访问凭证。运行本代码示例之前，请确保已设置环境变量OSS_ACCESS_KEY_ID和OSS_ACCESS_KEY_SECRET。
-        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        // 优先从配置文件获取，若未配置则从系统环境变量获取
+        CredentialsProvider credentialsProvider;
+        if (aliyunOssProperties.getAccessKeyId() != null && !aliyunOssProperties.getAccessKeyId().trim().isEmpty()
+                && aliyunOssProperties.getAccessKeySecret() != null && !aliyunOssProperties.getAccessKeySecret().trim().isEmpty()) {
+            credentialsProvider = new com.aliyun.oss.common.auth.DefaultCredentialProvider(
+                    aliyunOssProperties.getAccessKeyId().trim(),
+                    aliyunOssProperties.getAccessKeySecret().trim()
+            );
+        } else {
+            credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+        }
 
         // 填写Object完整路径，例如202406/1.png。Object完整路径中不能包含Bucket名称。
         //获取当前系统日期的字符串,格式为 yyyy/MM

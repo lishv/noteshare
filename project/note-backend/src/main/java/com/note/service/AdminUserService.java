@@ -16,6 +16,7 @@ import com.note.mapper.MainLinkMapper;
 import com.note.vo.ActiveUserVO;
 import com.note.vo.PageResult;
 import com.note.vo.UserVO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -37,6 +38,9 @@ public class AdminUserService {
     private final NoteFavoriteMapper noteFavoriteMapper;
     private final MainLinkMapper mainLinkMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+
+    @Value("${default.userPassword:123456}")
+    private String defaultUserPassword;
 
     private static final String BLACKLIST_PREFIX = "user:blacklist:";
 
@@ -85,8 +89,15 @@ public class AdminUserService {
 
         if (status == 0) {
             redisTemplate.opsForValue().set(BLACKLIST_PREFIX + user.getUsername(), "1", 7, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
         } else {
             redisTemplate.delete(BLACKLIST_PREFIX + user.getUsername());
+            try {
+                java.util.Set<String> keys = redisTemplate.keys("login:fail:" + user.getUsername() + ":*");
+                if (keys != null && !keys.isEmpty()) {
+                    redisTemplate.delete(keys);
+                }
+            } catch (Exception ignored) {}
         }
 
         logOperation(adminId, adminUsername, "USER_MANAGE",
@@ -106,24 +117,37 @@ public class AdminUserService {
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(user);
 
-        String failKey = "login:fail:" + user.getUsername() + ":*";
-        redisTemplate.delete(failKey);
+        try {
+            java.util.Set<String> keys = redisTemplate.keys("login:fail:" + user.getUsername() + ":*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception ignored) {}
 
         logOperation(adminId, adminUsername, "USER_MANAGE",
                 "解锁用户: " + user.getUsername(), "USER", userId, ipAddress);
     }
 
     @Transactional
-    @CacheEvict(value = {"activeUsers"}, allEntries = true)
+    @CacheEvict(value = {"activeUsers", "dashboard"}, allEntries = true)
     public void resetUserPassword(Long userId, Long adminId, String adminUsername, String ipAddress) {
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        user.setPassword(passwordEncoder.encode("123456"));
+        user.setPassword(passwordEncoder.encode(defaultUserPassword != null ? defaultUserPassword : "123456"));
+        user.setStatus(1);
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(user);
+
+        try {
+            redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
+            java.util.Set<String> keys = redisTemplate.keys("login:fail:" + user.getUsername() + ":*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception ignored) {}
 
         logOperation(adminId, adminUsername, "USER_MANAGE",
                 "重置用户密码: " + user.getUsername(), "USER", userId, ipAddress);
@@ -141,6 +165,7 @@ public class AdminUserService {
 
                 if (status == 0) {
                     redisTemplate.opsForValue().set(BLACKLIST_PREFIX + user.getUsername(), "1", 7, TimeUnit.DAYS);
+                    redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
                 } else {
                     redisTemplate.delete(BLACKLIST_PREFIX + user.getUsername());
                 }
@@ -183,6 +208,7 @@ public class AdminUserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setEmail(dto.getEmail());
         user.setPhone(dto.getPhone());
+        user.setBio(dto.getBio());
         user.setStatus(1);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
@@ -232,6 +258,7 @@ public class AdminUserService {
         vo.setEmail(user.getEmail());
         vo.setPhone(user.getPhone());
         vo.setAvatar(user.getAvatar());
+        vo.setBio(user.getBio());
         vo.setLastActiveAt(user.getLastActiveAt());
         vo.setCreatedAt(user.getCreatedAt());
         return vo;

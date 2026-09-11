@@ -24,8 +24,10 @@ public class SearchController {
     public Result<SearchVO> search(
             @Parameter(description = "搜索关键词") @RequestParam String keyword,
             @Parameter(description = "页码") @RequestParam(required = false) Integer page,
-            @Parameter(description = "每页大小") @RequestParam(required = false) Integer size) {
-        SearchVO result = searchService.search(keyword, page, size);
+            @Parameter(description = "每页大小") @RequestParam(required = false) Integer size,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        SearchVO result = searchService.search(keyword, currentUserId, page, size);
         return Result.success(result);
     }
 }

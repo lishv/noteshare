@@ -29,12 +29,12 @@ public class AdminNoteService {
         this.operationLogMapper = operationLogMapper;
     }
 
-    public PageResult<NoteVO> listNotes(Integer page, Integer size, String keyword, Integer isDeleted) {
+    public PageResult<NoteVO> listNotes(Integer page, Integer size, String keyword, Integer noteType, Integer isPublic, Integer isDeleted) {
         if (page == null) page = 1;
         if (size == null) size = 10;
 
         Page<NoteVO> notePage = new Page<>(page, size);
-        IPage<NoteVO> result = noteItemMapper.selectNotePageAdmin(notePage, keyword, isDeleted);
+        IPage<NoteVO> result = noteItemMapper.selectNotePageAdmin(notePage, keyword, noteType, isPublic, isDeleted);
         return PageResult.of(result.getTotal(), page, size, result.getRecords());
     }
 
@@ -89,12 +89,35 @@ public class AdminNoteService {
     @Transactional
     @CacheEvict(value = "dashboard", allEntries = true)
     public NoteVO createNote(Long userId, NoteDTO dto, Long adminId, String adminUsername, String ipAddress) {
+        int type = (dto.getNoteType() != null && dto.getNoteType() == 2) ? 2 : 1;
+
         NoteItem note = new NoteItem();
         note.setUserId(userId);
         note.setTitle(dto.getTitle());
-        note.setLocationOrUrl(dto.getLocationOrUrl());
+        note.setNoteType(type);
+        note.setLocationOrUrl(dto.getLocationOrUrl() != null ? dto.getLocationOrUrl() : "");
+        note.setContent(dto.getContent());
+        note.setCoverImage(dto.getCoverImage());
+
+        if (dto.getSummary() != null && !dto.getSummary().trim().isEmpty()) {
+            note.setSummary(dto.getSummary().trim());
+        } else if (type == 2 && dto.getContent() != null) {
+            String plainText = dto.getContent()
+                    .replaceAll("(?s)```.*?```", " ")
+                    .replaceAll("`.*?`", " ")
+                    .replaceAll("#+\\s*", "")
+                    .replaceAll("!\\[.*?\\]\\(.*?\\)", "")
+                    .replaceAll("\\[(.*?)\\]\\(.*?\\)", "$1")
+                    .replaceAll("[*_~`>\\-\\+]", " ")
+                    .replaceAll("\\s+", " ")
+                    .trim();
+            note.setSummary(plainText.length() > 150 ? plainText.substring(0, 150) + "..." : plainText);
+        }
+
         note.setViewCount(0L);
         note.setIsDeleted(0);
+        note.setIsPinned(0);
+        note.setIsPublic(dto.getIsPublic() != null ? dto.getIsPublic() : 1);
         note.setCreatedAt(LocalDateTime.now());
         note.setUpdatedAt(LocalDateTime.now());
 

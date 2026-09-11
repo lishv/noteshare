@@ -68,15 +68,16 @@ export function formatDate(dateStr: string): string {
 }
 
 /**
- * 敏感词简单校验（前端基础防护）
+ * 敏感词/XSS简单校验（前端基础防护）
  */
 export function containsSensitiveWords(text: string): boolean {
-  // 这里只做前端基础校验，后端会有完整校验
+  if (!text) return false
   const sensitivePatterns = [
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
     /javascript\s*:/i,
     /vbscript\s*:/i,
-    /data\s*:/i,
-    /on\w+\s*=/i,
+    /data\s*:\s*(?:text\/html|text\/javascript|application\/javascript|application\/x-javascript)/i,
+    /on(?:load|error|click|mouseover|mouseenter|focus|blur|submit)\s*=/i,
   ]
   return sensitivePatterns.some(pattern => pattern.test(text))
 }

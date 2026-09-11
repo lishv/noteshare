@@ -23,8 +23,20 @@ public class NoteVO {
     @Schema(description = "笔记标题", example = "Java基础笔记")
     private String title;
 
+    @Schema(description = "笔记类型: 1-链接笔记, 2-创作笔记", example = "1")
+    private Integer noteType;
+
     @Schema(description = "链接或位置", example = "https://example.com/note")
     private String locationOrUrl;
+
+    @Schema(description = "笔记正文内容 (Markdown格式)")
+    private String content;
+
+    @Schema(description = "笔记摘要")
+    private String summary;
+
+    @Schema(description = "封面图URL")
+    private String coverImage;
 
     @Schema(description = "浏览量", example = "10")
     private Long viewCount;
@@ -34,6 +46,9 @@ public class NoteVO {
 
     @Schema(description = "是否置顶: 0-否, 1-是")
     private Integer isPinned;
+
+    @Schema(description = "是否公开: 1-公开, 0-私密", example = "1")
+    private Integer isPublic;
 
     @Schema(description = "收藏数")
     private Long favoriteCount;

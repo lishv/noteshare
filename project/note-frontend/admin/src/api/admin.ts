@@ -32,10 +32,10 @@ export const batchDeleteUsers = (data: { ids: number[] }) =>
   request.delete('/users/batch', { data })
 
 // 笔记管理
-export const getNoteList = (params: { page?: number; size?: number; keyword?: string; isDeleted?: number }) =>
+export const getNoteList = (params: { page?: number; size?: number; keyword?: string; noteType?: number; isPublic?: number; isDeleted?: number }) =>
   request.get('/notes', { params })
 export const getNoteDetail = (noteId: number) => request.get(`/notes/${noteId}`)
-export const createNote = (userId: number, data: { title: string; locationOrUrl: string }) =>
+export const createNote = (userId: number, data: { title: string; noteType?: number; locationOrUrl?: string; content?: string; summary?: string; isPublic?: number }) =>
   request.post(`/notes?userId=${userId}`, data)
 export const deleteNote = (noteId: number) => request.put(`/notes/${noteId}/delete`)
 export const restoreNote = (noteId: number) => request.put(`/notes/${noteId}/restore`)

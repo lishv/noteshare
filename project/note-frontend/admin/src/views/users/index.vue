@@ -17,6 +17,12 @@
     <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
       <el-table-column type="selection" width="55" />
       <el-table-column prop="username" label="用户名" />
+      <el-table-column prop="bio" label="个性签名" min-width="150" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span v-if="row.bio">{{ row.bio }}</span>
+          <span v-else style="color: #909399; font-style: italic;">未设置</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="email" label="邮箱" />
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
@@ -65,6 +71,9 @@
         </el-form-item>
         <el-form-item label="手机号">
           <el-input v-model="createForm.phone" placeholder="请输入手机号（选填）" />
+        </el-form-item>
+        <el-form-item label="个性签名">
+          <el-input v-model="createForm.bio" placeholder="请输入个性签名（选填，最多30字）" maxlength="30" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -192,6 +201,7 @@ const createForm = ref({
   password: '',
   email: '',
   phone: '',
+  bio: '',
 })
 const createRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
@@ -204,7 +214,7 @@ const showCreateDialog = () => {
 }
 
 const resetCreateForm = () => {
-  createForm.value = { username: '', password: '', email: '', phone: '' }
+  createForm.value = { username: '', password: '', email: '', phone: '', bio: '' }
 }
 
 const handleCreate = async () => {

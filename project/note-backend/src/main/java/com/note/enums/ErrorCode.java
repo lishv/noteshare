@@ -21,11 +21,14 @@ public enum ErrorCode {
     ACCOUNT_LOCKED(1006, "账号已锁定，请10分钟后再试"),
     TOKEN_EXPIRED(1007, "Token已过期"),
     TOKEN_INVALID(1008, "Token无效"),
+    BIO_CONTAINS_SENSITIVE_WORD(1009, "个性签名包含敏感词"),
 
     NOTE_NOT_FOUND(2001, "笔记不存在"),
     NOTE_ACCESS_DENIED(2002, "无权限访问该笔记"),
     NOTE_CONTAINS_SENSITIVE_WORD(2003, "笔记包含敏感词"),
     NOTE_DELETED(2004, "笔记已删除"),
+    COMMENT_NOT_FOUND(2005, "评论不存在"),
+    COMMENT_CONTAINS_SENSITIVE_WORD(2006, "评论包含敏感词"),
 
     MAIN_LINK_NOT_FOUND(3001, "总链接不存在"),
     MAIN_LINK_ACCESS_DENIED(3002, "无权限访问该总链接"),

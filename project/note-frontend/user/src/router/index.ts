@@ -35,6 +35,24 @@ const router = createRouter({
       component: () => import('@/views/Favorites.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/note/editor',
+      name: 'NoteEditor',
+      component: () => import('@/views/Editor.vue'),
+      meta: { requiresAuth: true, title: '创作笔记' },
+    },
+    {
+      path: '/note/editor/:id',
+      name: 'NoteEdit',
+      component: () => import('@/views/Editor.vue'),
+      meta: { requiresAuth: true, title: '编辑笔记' },
+    },
+    {
+      path: '/note/:id',
+      name: 'NoteDetail',
+      component: () => import('@/views/NoteDetail.vue'),
+      meta: { title: '笔记详情' },
+    },
   ],
 })
 

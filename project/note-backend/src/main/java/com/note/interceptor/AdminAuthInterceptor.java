@@ -7,20 +7,24 @@ import com.note.util.AdminJwtUtil;
 import com.note.vo.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.PrintWriter;
+import java.util.Date;
 
 @Component
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
     private final AdminJwtUtil adminJwtUtil;
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public AdminAuthInterceptor(AdminJwtUtil adminJwtUtil) {
+    public AdminAuthInterceptor(AdminJwtUtil adminJwtUtil, RedisTemplate<String, Object> redisTemplate) {
         this.adminJwtUtil = adminJwtUtil;
         this.objectMapper = new ObjectMapper();
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -44,6 +48,25 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
 
         Long adminId = adminJwtUtil.getAdminIdFromToken(token);
         String adminUsername = adminJwtUtil.getUsernameFromToken(token);
+
+        // 检查密码是否被修改或重置（Token 签发时间早于密码修改时间）
+        try {
+            Object invalidBefore = redisTemplate.opsForValue().get("admin:token:invalid_before:" + adminId);
+            if (invalidBefore != null) {
+                long invalidTime = 0L;
+                if (invalidBefore instanceof Number) {
+                    invalidTime = ((Number) invalidBefore).longValue();
+                } else if (invalidBefore instanceof String) {
+                    invalidTime = Long.parseLong((String) invalidBefore);
+                }
+                Date iat = adminJwtUtil.getIssuedAtFromToken(token);
+                if (iat != null && iat.getTime() <= invalidTime) {
+                    handleAuthError(response, ErrorCode.TOKEN_EXPIRED.getCode(), "密码已修改，请重新登录");
+                    return false;
+                }
+            }
+        } catch (Exception ignored) {}
+
         request.setAttribute("adminId", adminId);
         request.setAttribute("adminUsername", adminUsername);
 

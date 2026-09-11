@@ -23,10 +23,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/admin/**",
-                        "/user/auth/**",
-                        "/user/users/active",
-                        "/user/notes/user/**",
-                        "/user/search",
                         "/openapi.json",
                         "/openapi.json/**",
                         "/api-docs",

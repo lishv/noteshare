@@ -7,6 +7,9 @@ import type {
   NoteItem,
   NoteRequest,
   SearchResult,
+  CommentItem,
+  CommentDTO,
+  FollowStatsVO,
 } from '@/types'
 
 // 获取活跃用户列表
@@ -41,9 +44,14 @@ export function createNote(data: NoteRequest): Promise<ApiResponse<NoteItem>> {
 // 获取用户笔记列表
 export function getUserNotes(
   userId: number,
-  params: { page?: number; size?: number; keyword?: string; startDate?: string; endDate?: string }
+  params: { page?: number; size?: number; keyword?: string; noteType?: number; startDate?: string; endDate?: string }
 ): Promise<ApiResponse<PageResult<NoteItem>>> {
   return request.get(`/notes/user/${userId}`, params)
+}
+
+// 获取单篇笔记详情 (包含 content 正文)
+export function getNoteById(noteId: number): Promise<ApiResponse<NoteItem>> {
+  return request.get(`/notes/${noteId}`)
 }
 
 // 更新笔记
@@ -102,6 +110,13 @@ export function unpinNote(noteId: number): Promise<ApiResponse> {
   return request.put(`/notes/${noteId}/unpin`)
 }
 
+// 上传笔记插图/封面
+export function uploadNoteImage(file: File): Promise<ApiResponse<string>> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post('/upload/image', formData)
+}
+
 // ========== 标签 ==========
 export interface Tag {
   id: number
@@ -121,3 +136,34 @@ export function createTag(name: string): Promise<ApiResponse<Tag>> {
 export function deleteTag(tagId: number): Promise<ApiResponse> {
   return request.delete(`/tags/${tagId}`)
 }
+
+// ========== 笔记评论与回复 ==========
+export function getNoteComments(noteId: number): Promise<ApiResponse<CommentItem[]>> {
+  return request.get(`/notes/${noteId}/comments`)
+}
+
+export function createComment(noteId: number, data: CommentDTO): Promise<ApiResponse<CommentItem>> {
+  return request.post(`/notes/${noteId}/comments`, data)
+}
+
+export function deleteNoteComment(noteId: number, commentId: number): Promise<ApiResponse> {
+  return request.delete(`/notes/${noteId}/comments/${commentId}`)
+}
+
+// ========== 关注系统 ==========
+export function followUser(userId: number): Promise<ApiResponse<boolean>> {
+  return request.post(`/follow/${userId}`)
+}
+
+export function unfollowUser(userId: number): Promise<ApiResponse<boolean>> {
+  return request.delete(`/follow/${userId}`)
+}
+
+export function getFollowStats(userId: number): Promise<ApiResponse<FollowStatsVO>> {
+  return request.get(`/follow/${userId}/status`)
+}
+
+export function getFollowedUsers(params?: { page?: number; size?: number }): Promise<ApiResponse<PageResult<User>>> {
+  return request.get('/follow/following', params)
+}
+

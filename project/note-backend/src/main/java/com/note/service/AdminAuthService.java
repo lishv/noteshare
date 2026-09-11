@@ -35,6 +35,9 @@ public class AdminAuthService {
     @Value("${security.login.lock-duration:600}")
     private Integer lockDuration;
 
+    @Value("${default.adminPassword:admin123}")
+    private String defaultAdminPassword;
+
     private static final String ADMIN_LOGIN_FAIL_KEY = "admin:login:fail:";
 
     public AdminAuthService(AdminMapper adminMapper, AdminJwtUtil adminJwtUtil,
@@ -87,7 +90,7 @@ public class AdminAuthService {
 
         adminMapper.updateLastLoginAt(admin.getId(), LocalDateTime.now());
 
-        boolean mustChangePassword = passwordEncoder.matches("admin123", admin.getPassword());
+        boolean mustChangePassword = passwordEncoder.matches(defaultAdminPassword != null ? defaultAdminPassword : "admin123", admin.getPassword());
 
         String token = adminJwtUtil.generateToken(admin.getId(), admin.getUsername());
 
@@ -124,6 +127,14 @@ public class AdminAuthService {
         admin.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         admin.setUpdatedAt(LocalDateTime.now());
         adminMapper.updateById(admin);
+
+        try {
+            redisTemplate.opsForValue().set("admin:token:invalid_before:" + admin.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
+            java.util.Set<String> keys = redisTemplate.keys(ADMIN_LOGIN_FAIL_KEY + admin.getUsername() + ":*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception ignored) {}
 
         logOperation(adminId, admin.getUsername(), "LOGIN", "管理员修改密码", null, null, ipAddress);
     }

@@ -1,8 +1,16 @@
 <template>
   <div class="note-management">
     <div class="search-bar">
-      <el-input v-model="keyword" placeholder="搜索笔记标题/用户名" clearable @keyup.enter="handleSearch" style="width: 250px; margin-right: 10px;" />
-      <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width: 150px; margin-right: 10px;" @change="handleSearch">
+      <el-input v-model="keyword" placeholder="搜索笔记标题/用户名" clearable @keyup.enter="handleSearch" style="width: 230px;" />
+      <el-select v-model="noteTypeFilter" placeholder="笔记类型" clearable style="width: 130px;" @change="handleSearch">
+        <el-option label="外链笔记" :value="1" />
+        <el-option label="原创创作" :value="2" />
+      </el-select>
+      <el-select v-model="isPublicFilter" placeholder="公开状态" clearable style="width: 120px;" @change="handleSearch">
+        <el-option label="公开" :value="1" />
+        <el-option label="私密" :value="0" />
+      </el-select>
+      <el-select v-model="statusFilter" placeholder="状态筛选" clearable style="width: 120px;" @change="handleSearch">
         <el-option label="正常" :value="0" />
         <el-option label="已删除" :value="1" />
       </el-select>
@@ -13,28 +21,48 @@
     </div>
 
     <el-table :data="tableData" v-loading="loading" @selection-change="handleSelectionChange" stripe>
-      <el-table-column type="selection" width="55" />
+      <el-table-column type="selection" width="50" />
+      <el-table-column label="类型" width="80">
+        <template #default="{ row }">
+          <el-tag :type="row.noteType === 2 ? 'success' : 'info'" size="small">
+            {{ row.noteType === 2 ? '原创' : '外链' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="可见性" width="85">
+        <template #default="{ row }">
+          <el-tag :type="row.isPublic === 0 ? 'warning' : 'info'" size="small">
+            {{ row.isPublic === 0 ? '私密' : '公开' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="title" label="标题" min-width="180">
         <template #default="{ row }">
           <el-tag v-if="row.isPinned === 1" type="warning" size="small" style="margin-right: 6px;">置顶</el-tag>
-          {{ row.title }}
+          <span class="note-title-cell" @click="handleViewDetail(row)">{{ row.title }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="username" label="所属用户" width="120" />
-      <el-table-column prop="locationOrUrl" label="链接/位置" min-width="200" show-overflow-tooltip />
+      <el-table-column label="内容摘要 / 链接" min-width="220" show-overflow-tooltip>
+        <template #default="{ row }">
+          <span v-if="row.noteType === 2" class="summary-text">{{ row.summary || '（暂无摘要）' }}</span>
+          <a v-else-if="isUrl(row.locationOrUrl)" :href="row.locationOrUrl" target="_blank" rel="noopener">{{ row.locationOrUrl }}</a>
+          <span v-else>{{ row.locationOrUrl }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="viewCount" label="浏览量" width="80" />
       <el-table-column label="收藏" width="70">
         <template #default="{ row }">
           <span>{{ row.favoriteCount ?? '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="状态" width="100">
+      <el-table-column label="状态" width="90">
         <template #default="{ row }">
           <el-tag :type="row.isDeleted === 1 ? 'danger' : 'success'">{{ row.isDeleted === 1 ? '已删除' : '正常' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="发布时间" width="180" />
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column prop="createdAt" label="发布时间" width="170" />
+      <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
           <el-button v-if="row.isDeleted === 0" link type="danger" @click="handleDelete(row)">删除</el-button>
           <el-button v-if="row.isDeleted === 1" link type="success" @click="handleRestore(row)">恢复</el-button>
@@ -58,22 +86,51 @@
     />
 
     <!-- 详情对话框 -->
-    <el-dialog v-model="detailVisible" title="笔记详情" width="600px">
-      <el-descriptions :column="1" border>
-        <el-descriptions-item label="标题">{{ detailData.title }}</el-descriptions-item>
+    <el-dialog v-model="detailVisible" title="笔记详情与审查" :width="detailData.noteType === 2 ? '820px' : '620px'">
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="标题" :span="2">
+          <strong>{{ detailData.title }}</strong>
+          <el-tag v-if="detailData.isPinned === 1" type="warning" size="small" style="margin-left: 8px;">已置顶</el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="所属用户">{{ detailData.username }}</el-descriptions-item>
-        <el-descriptions-item label="链接/位置">{{ detailData.locationOrUrl }}</el-descriptions-item>
+        <el-descriptions-item label="公开状态">
+          <el-tag :type="detailData.isPublic === 0 ? 'warning' : 'info'" size="small">
+            {{ detailData.isPublic === 0 ? '私密 (仅作者可见)' : '公开' }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="笔记类型">
+          <el-tag :type="detailData.noteType === 2 ? 'success' : 'info'" size="small">
+            {{ detailData.noteType === 2 ? '原创创作 (Markdown)' : '外链笔记' }}
+          </el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="浏览量">{{ detailData.viewCount }}</el-descriptions-item>
         <el-descriptions-item label="收藏数">{{ detailData.favoriteCount ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="置顶">{{ detailData.isPinned === 1 ? '是' : '否' }}</el-descriptions-item>
-        <el-descriptions-item label="状态">{{ detailData.isDeleted === 1 ? '已删除' : '正常' }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag :type="detailData.isDeleted === 1 ? 'danger' : 'success'">
+            {{ detailData.isDeleted === 1 ? '已删除' : '正常' }}
+          </el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="发布时间">{{ detailData.createdAt }}</el-descriptions-item>
-        <el-descriptions-item label="更新时间">{{ detailData.updatedAt }}</el-descriptions-item>
+        <el-descriptions-item v-if="detailData.noteType === 1" label="链接/位置" :span="2">
+          <a v-if="isUrl(detailData.locationOrUrl)" :href="detailData.locationOrUrl" target="_blank" rel="noopener">{{ detailData.locationOrUrl }}</a>
+          <span v-else>{{ detailData.locationOrUrl }}</span>
+        </el-descriptions-item>
+        <el-descriptions-item v-if="detailData.noteType === 2 && detailData.summary" label="摘要" :span="2">
+          {{ detailData.summary }}
+        </el-descriptions-item>
       </el-descriptions>
+
+      <!-- 原创笔记 Markdown 预览 -->
+      <div v-if="detailData.noteType === 2" class="markdown-preview-box">
+        <h4 class="preview-title">Markdown 内容预览：</h4>
+        <div class="preview-content">
+          <MdPreview editorId="admin-note-detail-preview" :modelValue="detailData.content || '（暂无正文内容）'" />
+        </div>
+      </div>
     </el-dialog>
 
     <!-- 新增笔记对话框 -->
-    <el-dialog v-model="createVisible" title="插入笔记" width="500px" @closed="resetCreateForm">
+    <el-dialog v-model="createVisible" title="插入笔记" width="600px" @closed="resetCreateForm">
       <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="90px">
         <el-form-item label="所属用户" prop="userId">
           <el-select v-model="createForm.userId" filterable remote reserve-keyword
@@ -82,12 +139,32 @@
             <el-option v-for="u in userOptions" :key="u.id" :label="u.username" :value="u.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="笔记标题" prop="title">
-          <el-input v-model="createForm.title" placeholder="请输入笔记标题" maxlength="100" />
+        <el-form-item label="笔记类型" prop="noteType">
+          <el-radio-group v-model="createForm.noteType">
+            <el-radio :value="1">外链笔记</el-radio>
+            <el-radio :value="2">原创创作笔记</el-radio>
+          </el-radio-group>
         </el-form-item>
-        <el-form-item label="链接/位置" prop="locationOrUrl">
+        <el-form-item label="公开状态" prop="isPublic">
+          <el-radio-group v-model="createForm.isPublic">
+            <el-radio :value="1">公开</el-radio>
+            <el-radio :value="0">私密</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="笔记标题" prop="title">
+          <el-input v-model="createForm.title" placeholder="请输入笔记标题" maxlength="100" show-word-limit />
+        </el-form-item>
+        <el-form-item v-if="createForm.noteType === 1" label="链接/位置" prop="locationOrUrl">
           <el-input v-model="createForm.locationOrUrl" placeholder="请输入链接或位置" />
         </el-form-item>
+        <template v-if="createForm.noteType === 2">
+          <el-form-item label="摘要" prop="summary">
+            <el-input v-model="createForm.summary" type="textarea" :rows="2" placeholder="可选，留空将从正文自动提取" />
+          </el-form-item>
+          <el-form-item label="正文内容" prop="content">
+            <el-input v-model="createForm.content" type="textarea" :rows="8" placeholder="请输入 Markdown 格式的笔记正文" />
+          </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="createVisible = false">取消</el-button>
@@ -98,12 +175,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getNoteList, getNoteDetail, createNote, deleteNote, restoreNote, batchDeleteNotes, batchRestoreNotes, getUserList, pinNote, unpinNote, getNoteFavoriteCount } from '@/api/admin'
+import type { FormRules } from 'element-plus'
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
+import {
+  getNoteList,
+  getNoteDetail,
+  createNote,
+  deleteNote,
+  restoreNote,
+  batchDeleteNotes,
+  batchRestoreNotes,
+  getUserList,
+  pinNote,
+  unpinNote,
+  getNoteFavoriteCount,
+} from '@/api/admin'
 
 const loading = ref(false)
 const keyword = ref('')
+const noteTypeFilter = ref<number | undefined>(undefined)
+const isPublicFilter = ref<number | undefined>(undefined)
 const statusFilter = ref<number | undefined>(undefined)
 const page = ref(1)
 const size = ref(20)
@@ -114,6 +208,11 @@ const selectedIds = ref<number[]>([])
 const detailVisible = ref(false)
 const detailData = ref<any>({})
 
+const isUrl = (text?: string) => {
+  if (!text) return false
+  return /^https?:\/\//i.test(text.trim())
+}
+
 const fetchData = async () => {
   loading.value = true
   try {
@@ -121,6 +220,8 @@ const fetchData = async () => {
       page: page.value,
       size: size.value,
       keyword: keyword.value || undefined,
+      noteType: noteTypeFilter.value,
+      isPublic: isPublicFilter.value,
       isDeleted: statusFilter.value,
     })
     tableData.value = res.data.list
@@ -138,7 +239,7 @@ const handleSearch = () => {
 }
 
 const handleSelectionChange = (rows: any[]) => {
-  selectedIds.value = rows.map(r => r.id)
+  selectedIds.value = rows.map((r) => r.id)
 }
 
 const handleDelete = async (row: any) => {
@@ -197,7 +298,9 @@ const handleViewDetail = async (row: any) => {
     try {
       const favRes = await getNoteFavoriteCount(row.id)
       detailData.value.favoriteCount = favRes.data
-    } catch { detailData.value.favoriteCount = 0 }
+    } catch {
+      detailData.value.favoriteCount = 0
+    }
     detailVisible.value = true
   } catch (e) { /* handled */ }
 }
@@ -210,21 +313,35 @@ const userSearching = ref(false)
 const userOptions = ref<{ id: number; username: string }[]>([])
 const createForm = ref({
   userId: undefined as number | undefined,
+  noteType: 1,
+  isPublic: 1,
   title: '',
   locationOrUrl: '',
+  summary: '',
+  content: '',
 })
-const createRules = {
+
+const createRules = computed<FormRules>(() => ({
   userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
   title: [{ required: true, message: '请输入笔记标题', trigger: 'blur' }],
-  locationOrUrl: [{ required: true, message: '请输入链接/位置', trigger: 'blur' }],
-}
+  locationOrUrl: createForm.value.noteType === 1 ? [{ required: true, message: '请输入链接/位置', trigger: 'blur' }] : [],
+  content: createForm.value.noteType === 2 ? [{ required: true, message: '请输入笔记正文内容', trigger: 'blur' }] : [],
+}))
 
 const showCreateDialog = () => {
   createVisible.value = true
 }
 
 const resetCreateForm = () => {
-  createForm.value = { userId: undefined, title: '', locationOrUrl: '' }
+  createForm.value = {
+    userId: undefined,
+    noteType: 1,
+    isPublic: 1,
+    title: '',
+    locationOrUrl: '',
+    summary: '',
+    content: '',
+  }
   userOptions.value = []
 }
 
@@ -245,12 +362,16 @@ const handleCreate = async () => {
   try {
     await createNote(createForm.value.userId!, {
       title: createForm.value.title,
-      locationOrUrl: createForm.value.locationOrUrl,
+      noteType: createForm.value.noteType,
+      isPublic: createForm.value.isPublic,
+      locationOrUrl: createForm.value.noteType === 1 ? createForm.value.locationOrUrl : undefined,
+      content: createForm.value.noteType === 2 ? createForm.value.content : undefined,
+      summary: createForm.value.noteType === 2 ? createForm.value.summary : undefined,
     })
     ElMessage.success('插入成功')
     createVisible.value = false
     fetchData()
-  } catch { /* handled */ }
+  } catch (e) { /* handled */ }
   finally { createLoading.value = false }
 }
 
@@ -267,5 +388,35 @@ onMounted(() => fetchData())
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+}
+.note-title-cell {
+  cursor: pointer;
+  color: #409eff;
+}
+.note-title-cell:hover {
+  text-decoration: underline;
+}
+.summary-text {
+  color: #606266;
+  font-size: 13px;
+}
+.markdown-preview-box {
+  margin-top: 16px;
+  border-top: 1px solid #ebeef5;
+  padding-top: 12px;
+}
+.preview-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #303133;
+}
+.preview-content {
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  background: #fafafa;
+  padding: 8px;
 }
 </style>

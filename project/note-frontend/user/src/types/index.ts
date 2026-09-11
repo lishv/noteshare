@@ -28,11 +28,25 @@ export interface User {
   email: string
   phone?: string
   avatar?: string
+  bio?: string
   status: number
   lastActiveAt?: string
   createdAt: string
   hasMainLink?: boolean
   noteCount?: number
+  followerCount?: number
+}
+
+export interface UpdateBioRequest {
+  bio: string
+}
+
+// 关注状态与统计
+export interface FollowStatsVO {
+  userId: number
+  followerCount: number
+  followingCount: number
+  isFollowing: boolean
 }
 
 // 登录请求
@@ -87,9 +101,15 @@ export interface NoteItem {
   username?: string
   avatar?: string
   title: string
-  locationOrUrl: string
+  noteType?: number // 1: 链接笔记, 2: 创作笔记
+  locationOrUrl?: string
+  content?: string
+  summary?: string
+  coverImage?: string
   viewCount: number
+  favoriteCount?: number
   isPinned?: number
+  isPublic?: number // 1: 公开, 0: 私密
   isDeleted?: number
   createdAt: string
   updatedAt: string
@@ -98,7 +118,12 @@ export interface NoteItem {
 // 创建/更新笔记请求
 export interface NoteRequest {
   title: string
-  locationOrUrl: string
+  noteType?: number
+  locationOrUrl?: string
+  content?: string
+  summary?: string
+  coverImage?: string
+  isPublic?: number // 1: 公开, 0: 私密
   tagIds?: number[]
 }
 
@@ -110,3 +135,29 @@ export interface SearchResult {
   users: User[]
   notes: NoteItem[]
 }
+
+// 评论数据结构
+export interface CommentItem {
+  id: number
+  noteId: number
+  userId: number
+  username: string
+  avatar?: string
+  parentId?: number
+  replyToUserId?: number
+  replyToUsername?: string
+  replyToCommentId?: number
+  content: string
+  isOwner?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// 发表评论请求
+export interface CommentDTO {
+  content: string
+  parentId?: number
+  replyToUserId?: number
+  replyToCommentId?: number
+}
+

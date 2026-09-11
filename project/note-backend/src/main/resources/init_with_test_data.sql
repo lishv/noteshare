@@ -13,6 +13,7 @@ CREATE TABLE `t_user` (
   `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
   `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
   `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像 URL',
+  `bio` VARCHAR(100) DEFAULT NULL COMMENT '个性签名 (最多30字)',
   `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-正常，0-禁用，2-锁定',
   `last_active_at` DATETIME DEFAULT NULL COMMENT '最后活跃时间 (用于排序)',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

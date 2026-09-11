@@ -1,7 +1,7 @@
 <template>
   <div class="auth-page">
     <div class="auth-card">
-      <div class="auth-logo">
+      <div class="auth-logo" @click="router.push('/')" title="返回首页">
         <div class="logo-icon">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <rect x="2" y="2" width="24" height="24" rx="6" fill="var(--color-primary)"/>
@@ -153,6 +153,13 @@ async function handleLogin() {
   align-items: center;
   gap: 10px;
   margin-bottom: 32px;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+
+.auth-logo:hover {
+  opacity: 0.85;
 }
 
 .logo-icon {

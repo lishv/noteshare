@@ -15,7 +15,8 @@
       <el-form-item label="操作类型">
         <el-radio-group v-model="form.type" @change="handleTypeChange">
           <el-radio value="mainLink">设置总链接</el-radio>
-          <el-radio value="note">添加单篇笔记</el-radio>
+          <el-radio value="note">添加单篇链接笔记</el-radio>
+          <el-radio value="article">在线创作笔记</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -30,7 +31,7 @@
         </el-form-item>
       </template>
 
-      <!-- 笔记表单 -->
+      <!-- 链接笔记表单 -->
       <template v-if="form.type === 'note'">
         <el-form-item label="笔记名称" prop="title">
           <el-input
@@ -55,12 +56,40 @@
             class="form-alert"
           />
         </el-form-item>
+        <el-form-item label="公开状态">
+          <el-radio-group v-model="form.isPublic">
+            <el-radio :value="1">
+              <span>公开</span>
+              <span class="sub-label">（所有人及访客可见）</span>
+            </el-radio>
+            <el-radio :value="0">
+              <span>私密</span>
+              <span class="sub-label">（仅自己可见）</span>
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </template>
+
+      <!-- 在线创作笔记提示与入口 -->
+      <template v-if="form.type === 'article'">
+        <div class="article-creation-card">
+          <div class="article-creation-icon">
+            <el-icon :size="36" color="#409eff"><EditPen /></el-icon>
+          </div>
+          <div class="article-creation-content">
+            <h4>沉浸式 Markdown 创作工作台</h4>
+            <p>支持 Markdown 语法、代码块高亮、公式、表格排版以及实时粘贴上传图片，提供专注、高效的创作体验。</p>
+            <el-button type="primary" size="default" :icon="EditPen" @click="goToEditor">
+              进入独立编辑器创作
+            </el-button>
+          </div>
+        </div>
       </template>
     </el-form>
 
     <template #footer>
       <el-button @click="dialogVisible = false">取消</el-button>
-      <el-button type="primary" :loading="loading" @click="handleSubmit">
+      <el-button v-if="form.type !== 'article'" type="primary" :loading="loading" @click="handleSubmit">
         {{ editNote ? '保存' : '发布' }}
       </el-button>
     </template>
@@ -69,12 +98,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { EditPen } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { setMainLink, createNote, updateNote, getMyTags } from '@/api/note'
 import type { Tag } from '@/api/note'
 import { isUrl, autoCompleteUrl, containsSensitiveWords } from '@/utils/helpers'
 import type { NoteItem } from '@/types'
+
+const router = useRouter()
 
 const props = defineProps<{
   visible: boolean
@@ -97,12 +130,22 @@ const formRef = ref<FormInstance>()
 const loading = ref(false)
 
 const form = reactive({
-  type: 'note' as 'mainLink' | 'note',
+  type: 'note' as 'mainLink' | 'note' | 'article',
   title: '',
   locationOrUrl: '',
   mainUrl: '',
+  isPublic: 1,
   tagIds: [] as number[],
 })
+
+function goToEditor() {
+  dialogVisible.value = false
+  if (props.editNote && props.editNote.noteType === 2) {
+    router.push(`/note/editor/${props.editNote.id}`)
+  } else {
+    router.push('/note/editor')
+  }
+}
 
 const myTags = ref<Tag[]>([])
 
@@ -141,6 +184,7 @@ function handleTypeChange() {
   form.title = ''
   form.locationOrUrl = ''
   form.mainUrl = ''
+  form.isPublic = 1
   form.tagIds = []
   formRef.value?.clearValidate()
 }
@@ -150,6 +194,7 @@ function handleClose() {
   form.title = ''
   form.locationOrUrl = ''
   form.mainUrl = ''
+  form.isPublic = 1
   form.tagIds = []
   formRef.value?.resetFields()
 }
@@ -168,7 +213,8 @@ watch(
     if (note) {
       form.type = 'note'
       form.title = note.title
-      form.locationOrUrl = note.locationOrUrl
+      form.locationOrUrl = note.locationOrUrl || ''
+      form.isPublic = note.isPublic !== undefined ? note.isPublic : 1
     }
   },
   { immediate: true }
@@ -201,6 +247,7 @@ async function handleSubmit() {
         await updateNote(props.editNote.id, {
           title: form.title,
           locationOrUrl: form.locationOrUrl,
+          isPublic: form.isPublic,
           tagIds: form.tagIds,
         })
         ElMessage.success('笔记更新成功')
@@ -208,6 +255,7 @@ async function handleSubmit() {
         await createNote({
           title: form.title,
           locationOrUrl: form.locationOrUrl,
+          isPublic: form.isPublic,
           tagIds: form.tagIds,
         })
         ElMessage.success('笔记发布成功')
@@ -224,11 +272,46 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
+.article-creation-card {
+  display: flex;
+  gap: 16px;
+  background: #f0f7ff;
+  border: 1px solid #d0e5ff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 8px;
+  align-items: flex-start;
+}
+
+.article-creation-icon {
+  margin-top: 2px;
+}
+
+.article-creation-content h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d2129;
+  margin: 0 0 6px 0;
+}
+
+.article-creation-content p {
+  font-size: 13px;
+  color: #4e5969;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
 .form-tip {
   font-size: 12px;
   color: var(--color-text-tertiary);
   margin-top: 4px;
   line-height: 1.5;
+}
+
+.sub-label {
+  font-size: 12px;
+  color: #909399;
+  margin-left: 2px;
 }
 
 .form-alert {

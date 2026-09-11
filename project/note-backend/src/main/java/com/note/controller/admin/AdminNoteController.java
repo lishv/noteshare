@@ -33,8 +33,10 @@ public class AdminNoteController {
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "笔记类型: 1-链接, 2-创作") @RequestParam(required = false) Integer noteType,
+            @Parameter(description = "公开状态: 0-私密, 1-公开") @RequestParam(required = false) Integer isPublic,
             @Parameter(description = "删除状态: 0-正常, 1-已删除") @RequestParam(required = false) Integer isDeleted) {
-        return Result.success(adminNoteService.listNotes(page, size, keyword, isDeleted));
+        return Result.success(adminNoteService.listNotes(page, size, keyword, noteType, isPublic, isDeleted));
     }
 
     @GetMapping("/{noteId}")

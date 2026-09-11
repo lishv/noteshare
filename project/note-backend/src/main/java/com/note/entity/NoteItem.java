@@ -16,7 +16,15 @@ public class NoteItem {
 
     private String title;
 
+    private Integer noteType;
+
     private String locationOrUrl;
+
+    private String content;
+
+    private String summary;
+
+    private String coverImage;
 
     private Long viewCount;
 
@@ -24,6 +32,8 @@ public class NoteItem {
     private Integer isDeleted;
 
     private Integer isPinned;
+
+    private Integer isPublic;
 
     private LocalDateTime deletedAt;
 

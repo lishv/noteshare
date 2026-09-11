@@ -44,4 +44,22 @@ public class UploadController {
 
         return Result.success("头像上传成功", userVO);
     }
+
+    @PostMapping("/image")
+    @Operation(summary = "上传图片", description = "上传笔记插图/封面等通用图片")
+    public Result<String> uploadImage(@RequestParam("file") MultipartFile file) throws Exception {
+        if (file.isEmpty()) {
+            return Result.error(400, "请选择要上传的文件");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return Result.error(400, "只能上传图片文件");
+        }
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return Result.error(400, "图片大小不能超过10MB");
+        }
+
+        String url = aliyunOSSOperator.upload(file.getBytes(), file.getOriginalFilename());
+        return Result.success("图片上传成功", url);
+    }
 }

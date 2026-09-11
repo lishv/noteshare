@@ -26,4 +26,8 @@ public class UserCreateDTO {
 
     @Schema(description = "手机号")
     private String phone;
+
+    @Schema(description = "个性签名 (最多30字)")
+    @Size(max = 30, message = "个性签名不能超过30个字符")
+    private String bio;
 }

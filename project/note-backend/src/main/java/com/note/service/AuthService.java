@@ -129,6 +129,7 @@ public class AuthService {
         vo.setEmail(user.getEmail());
         vo.setPhone(user.getPhone());
         vo.setAvatar(user.getAvatar());
+        vo.setBio(user.getBio());
         vo.setLastActiveAt(user.getLastActiveAt());
         vo.setCreatedAt(user.getCreatedAt());
         return vo;

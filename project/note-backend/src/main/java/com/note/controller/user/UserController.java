@@ -1,6 +1,7 @@
 package com.note.controller.user;
 
 import com.note.dto.ChangePasswordDTO;
+import com.note.dto.UpdateBioDTO;
 import com.note.service.UserService;
 import com.note.vo.PageResult;
 import com.note.vo.ActiveUserVO;
@@ -32,6 +33,14 @@ public class UserController {
         return Result.success(userVO);
     }
 
+    @PutMapping("/bio")
+    @Operation(summary = "修改个性签名", description = "修改当前登录用户的个性签名（最多30字）")
+    public Result<UserVO> updateBio(@Valid @RequestBody UpdateBioDTO dto, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        UserVO userVO = userService.updateBio(userId, dto.getBio());
+        return Result.success("个性签名修改成功", userVO);
+    }
+
     @PutMapping("/password")
     @Operation(summary = "修改密码", description = "修改当前登录用户的密码")
     public Result<Void> changePassword(@Valid @RequestBody ChangePasswordDTO dto, HttpServletRequest request) {
@@ -41,12 +50,14 @@ public class UserController {
     }
 
     @GetMapping("/active")
-    @Operation(summary = "获取活跃用户列表", description = "分页获取活跃用户列表")
+    @Operation(summary = "获取用户列表", description = "分页获取用户列表，登录时默认展示已关注作者，支持关键词搜索全量用户")
     public Result<PageResult<ActiveUserVO>> getActiveUsers(
             @Parameter(description = "页码") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页大小") @RequestParam(required = false) Integer size,
-            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword) {
-        PageResult<ActiveUserVO> result = userService.getActiveUsers(page, size, keyword);
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        PageResult<ActiveUserVO> result = userService.getActiveUsers(currentUserId, page, size, keyword);
         return Result.success(result);
     }
 }

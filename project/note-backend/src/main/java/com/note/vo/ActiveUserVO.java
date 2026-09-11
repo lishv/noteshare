@@ -20,6 +20,9 @@ public class ActiveUserVO {
     @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
     private String avatar;
 
+    @Schema(description = "个性签名 (最多30字)", example = "努力学习，天天向上")
+    private String bio;
+
     @Schema(description = "状态: 0-禁用, 1-正常, 2-锁定")
     private Integer status;
 
@@ -31,6 +34,9 @@ public class ActiveUserVO {
 
     @Schema(description = "笔记数量", example = "5")
     private Integer noteCount;
+
+    @Schema(description = "关注量/粉丝数", example = "10")
+    private Integer followerCount;
 
     @Schema(description = "注册时间")
     private LocalDateTime createdAt;
