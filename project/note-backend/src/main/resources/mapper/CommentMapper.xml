@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.note.mapper.CommentMapper">
+
+    <select id="selectCommentsByNoteId" resultType="com.note.vo.CommentVO">
+        SELECT
+            c.id,
+            c.note_id AS noteId,
+            c.user_id AS userId,
+            u.username,
+            u.avatar,
+            c.parent_id AS parentId,
+            c.reply_to_user_id AS replyToUserId,
+            ru.username AS replyToUsername,
+            c.reply_to_comment_id AS replyToCommentId,
+            c.content,
+            c.created_at AS createdAt,
+            c.updated_at AS updatedAt
+        FROM t_comment c
+        LEFT JOIN t_user u ON c.user_id = u.id
+        LEFT JOIN t_user ru ON c.reply_to_user_id = ru.id
+        WHERE c.note_id = #{noteId} AND c.is_deleted = 0
+        ORDER BY c.created_at ASC
+    </select>
+
+</mapper>
