@@ -5,6 +5,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   ChangePasswordRequest,
+  ResetPasswordRequest,
   SendCodeRequest,
   User,
 } from '@/types'
@@ -54,4 +55,9 @@ export function updateUserBio(bio: string): Promise<ApiResponse<User>> {
 // 发送验证码
 export function sendVerificationCode(data: SendCodeRequest): Promise<ApiResponse> {
   return request.post('/auth/send-code', data)
+}
+
+// 使用邮箱验证码重置密码
+export function resetPassword(data: ResetPasswordRequest): Promise<ApiResponse> {
+  return request.post('/auth/reset-password', data)
 }

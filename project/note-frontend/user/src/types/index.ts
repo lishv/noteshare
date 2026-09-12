@@ -80,6 +80,13 @@ export interface ChangePasswordRequest {
   verificationCode?: string
 }
 
+// 忘记密码请求
+export interface ResetPasswordRequest {
+  email: string
+  verificationCode: string
+  newPassword: string
+}
+
 // 发送验证码请求
 export interface SendCodeRequest {
   email: string

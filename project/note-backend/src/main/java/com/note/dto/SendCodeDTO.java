@@ -13,7 +13,7 @@ public class SendCodeDTO {
     @Email(message = "邮箱格式错误")
     private String email;
 
-    @Schema(description = "场景：register-注册，changePassword-修改密码", example = "register", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "场景：register-注册，changePassword-已登录修改密码，resetPassword-忘记密码", example = "register", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "场景不能为空")
     private String scene;
 }
