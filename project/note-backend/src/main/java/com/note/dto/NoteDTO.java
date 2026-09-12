@@ -35,4 +35,7 @@ public class NoteDTO {
 
     @Schema(description = "标签ID列表")
     private List<Long> tagIds;
+
+    @Schema(description = "标签名称列表")
+    private List<String> tagNames;
 }

@@ -23,4 +23,6 @@ public interface UserFollowMapper extends BaseMapper<UserFollow> {
     int checkIsFollowing(@Param("followerId") Long followerId, @Param("followingId") Long followingId);
 
     IPage<ActiveUserVO> selectFollowedUsers(Page<ActiveUserVO> page, @Param("followerId") Long followerId);
+
+    IPage<ActiveUserVO> selectFollowers(Page<ActiveUserVO> page, @Param("targetUserId") Long targetUserId, @Param("currentUserId") Long currentUserId);
 }

@@ -5,6 +5,8 @@
         <el-option label="登录" value="LOGIN" />
         <el-option label="用户管理" value="USER_MANAGE" />
         <el-option label="笔记管理" value="NOTE_MANAGE" />
+        <el-option label="评论管理" value="COMMENT_MANAGE" />
+        <el-option label="消息管理" value="NOTIFICATION_MANAGE" />
         <el-option label="链接管理" value="LINK_MANAGE" />
         <el-option label="敏感词管理" value="WORD_MANAGE" />
         <el-option label="管理员管理" value="ADMIN_MANAGE" />
@@ -68,11 +70,15 @@ const typeNameMap: Record<string, string> = {
   LOGIN: '登录',
   USER_MANAGE: '用户管理',
   NOTE_MANAGE: '笔记管理',
+  COMMENT_MANAGE: '评论管理',
+  NOTIFICATION_MANAGE: '消息管理',
   LINK_MANAGE: '链接管理',
   WORD_MANAGE: '敏感词管理',
   ADMIN_MANAGE: '管理员管理',
   USER: '用户',
   NOTE: '笔记',
+  COMMENT: '评论',
+  NOTIFICATION: '消息',
   MAIN_LINK: '总链接',
   SENSITIVE_WORD: '敏感词',
   ADMIN: '管理员',
@@ -82,6 +88,8 @@ const typeTagMap: Record<string, string> = {
   LOGIN: '',
   USER_MANAGE: 'success',
   NOTE_MANAGE: 'warning',
+  COMMENT_MANAGE: 'primary',
+  NOTIFICATION_MANAGE: 'info',
   LINK_MANAGE: 'info',
   WORD_MANAGE: 'danger',
   ADMIN_MANAGE: 'danger',

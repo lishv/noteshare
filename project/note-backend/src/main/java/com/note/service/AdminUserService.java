@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.note.dto.UserCreateDTO;
+import com.note.dto.UserUpdateDTO;
 import com.note.entity.OperationLog;
 import com.note.entity.User;
 import com.note.enums.ErrorCode;
@@ -37,6 +38,7 @@ public class AdminUserService {
     private final NoteItemMapper noteItemMapper;
     private final NoteFavoriteMapper noteFavoriteMapper;
     private final MainLinkMapper mainLinkMapper;
+    private final NotificationService notificationService;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Value("${default.userPassword:123456}")
@@ -47,13 +49,15 @@ public class AdminUserService {
     public AdminUserService(UserMapper userMapper, RedisTemplate<String, Object> redisTemplate,
                             OperationLogMapper operationLogMapper, NoteItemMapper noteItemMapper,
                             NoteFavoriteMapper noteFavoriteMapper,
-                            MainLinkMapper mainLinkMapper) {
+                            MainLinkMapper mainLinkMapper,
+                            NotificationService notificationService) {
         this.userMapper = userMapper;
         this.redisTemplate = redisTemplate;
         this.operationLogMapper = operationLogMapper;
         this.noteItemMapper = noteItemMapper;
         this.noteFavoriteMapper = noteFavoriteMapper;
         this.mainLinkMapper = mainLinkMapper;
+        this.notificationService = notificationService;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
@@ -103,6 +107,32 @@ public class AdminUserService {
         logOperation(adminId, adminUsername, "USER_MANAGE",
                 (status == 0 ? "禁用" : "启用") + "用户: " + user.getUsername(),
                 "USER", userId, ipAddress);
+
+        if (status == 0) {
+            try {
+                notificationService.sendNotification(
+                        userId,
+                        null,
+                        "SYSTEM",
+                        "系统通知：您的账号已被管理员禁用",
+                        "您的账号状态已变更为禁用状态，如有疑问请联系管理员。",
+                        "USER",
+                        userId
+                );
+            } catch (Exception ignored) {}
+        } else {
+            try {
+                notificationService.sendNotification(
+                        userId,
+                        null,
+                        "SYSTEM",
+                        "系统通知：您的账号已被管理员恢复正常",
+                        "您的账号状态已恢复正常，欢迎继续使用笔记分享平台。",
+                        "USER",
+                        userId
+                );
+            } catch (Exception ignored) {}
+        }
     }
 
     @Transactional
@@ -126,6 +156,18 @@ public class AdminUserService {
 
         logOperation(adminId, adminUsername, "USER_MANAGE",
                 "解锁用户: " + user.getUsername(), "USER", userId, ipAddress);
+
+        try {
+            notificationService.sendNotification(
+                    userId,
+                    null,
+                    "SYSTEM",
+                    "系统通知：您的账号已被管理员解除锁定",
+                    "您的账号已被管理员成功解锁，您可以正常登录与发表笔记。",
+                    "USER",
+                    userId
+            );
+        } catch (Exception ignored) {}
     }
 
     @Transactional
@@ -151,6 +193,18 @@ public class AdminUserService {
 
         logOperation(adminId, adminUsername, "USER_MANAGE",
                 "重置用户密码: " + user.getUsername(), "USER", userId, ipAddress);
+
+        try {
+            notificationService.sendNotification(
+                    userId,
+                    null,
+                    "SYSTEM",
+                    "系统通知：您的密码已被管理员重置",
+                    "管理员已将您的密码重置为初始密码 (123456)，请尽快登录个人设置中心修改密码以保证安全。",
+                    "USER",
+                    userId
+            );
+        } catch (Exception ignored) {}
     }
 
     @Transactional
@@ -166,8 +220,30 @@ public class AdminUserService {
                 if (status == 0) {
                     redisTemplate.opsForValue().set(BLACKLIST_PREFIX + user.getUsername(), "1", 7, TimeUnit.DAYS);
                     redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
+                    try {
+                        notificationService.sendNotification(
+                                userId,
+                                null,
+                                "SYSTEM",
+                                "系统通知：您的账号已被管理员禁用",
+                                "您的账号状态已变更为禁用状态，如有疑问请联系管理员。",
+                                "USER",
+                                userId
+                        );
+                    } catch (Exception ignored) {}
                 } else {
                     redisTemplate.delete(BLACKLIST_PREFIX + user.getUsername());
+                    try {
+                        notificationService.sendNotification(
+                                userId,
+                                null,
+                                "SYSTEM",
+                                "系统通知：您的账号已被管理员恢复正常",
+                                "您的账号状态已恢复正常，欢迎继续使用笔记分享平台。",
+                                "USER",
+                                userId
+                        );
+                    } catch (Exception ignored) {}
                 }
             }
         }
@@ -216,6 +292,64 @@ public class AdminUserService {
 
         logOperation(adminId, adminUsername, "USER_MANAGE",
                 "创建用户: " + dto.getUsername(), "USER", user.getId(), ipAddress);
+    }
+
+    @Transactional
+    @CacheEvict(value = {"activeUsers", "dashboard"}, allEntries = true)
+    public UserVO updateUser(Long userId, UserUpdateDTO dto, Long adminId, String adminUsername, String ipAddress) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 检查用户名唯一性（如果修改了用户名）
+        if (!user.getUsername().equals(dto.getUsername())) {
+            User existing = userMapper.selectByUsername(dto.getUsername());
+            if (existing != null && !existing.getId().equals(userId)) {
+                throw new BusinessException(ErrorCode.USERNAME_DUPLICATE);
+            }
+            redisTemplate.delete(BLACKLIST_PREFIX + user.getUsername());
+            redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
+            user.setUsername(dto.getUsername());
+        }
+
+        // 检查邮箱唯一性（如果修改了邮箱）
+        if (!user.getEmail().equals(dto.getEmail())) {
+            User existing = userMapper.selectByEmail(dto.getEmail());
+            if (existing != null && !existing.getId().equals(userId)) {
+                throw new BusinessException(ErrorCode.EMAIL_DUPLICATE);
+            }
+            user.setEmail(dto.getEmail());
+        }
+
+        user.setPhone(dto.getPhone());
+        user.setBio(dto.getBio() != null ? dto.getBio().trim() : null);
+
+        // 如果修改了密码
+        if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword().trim()));
+            redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
+        }
+
+        // 如果修改了状态
+        if (dto.getStatus() != null && !dto.getStatus().equals(user.getStatus())) {
+            Integer oldStatus = user.getStatus();
+            user.setStatus(dto.getStatus());
+            if (dto.getStatus() == 0) {
+                redisTemplate.opsForValue().set(BLACKLIST_PREFIX + user.getUsername(), "1", 7, TimeUnit.DAYS);
+                redisTemplate.opsForValue().set("user:token:invalid_before:" + user.getId(), System.currentTimeMillis(), 7, TimeUnit.DAYS);
+            } else if (oldStatus == 0) {
+                redisTemplate.delete(BLACKLIST_PREFIX + user.getUsername());
+            }
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        logOperation(adminId, adminUsername, "USER_MANAGE",
+                "编辑修改用户: " + user.getUsername(), "USER", user.getId(), ipAddress);
+
+        return convertToVO(user);
     }
 
     @Transactional

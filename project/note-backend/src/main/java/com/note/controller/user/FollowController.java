@@ -62,4 +62,20 @@ public class FollowController {
         PageResult<ActiveUserVO> result = followService.getFollowedUsers(currentUserId, page, size);
         return Result.success(result);
     }
+
+    @GetMapping("/followers")
+    @Operation(summary = "获取粉丝列表", description = "分页获取粉丝列表，默认查询当前登录用户的粉丝，并标明是否已回关")
+    public Result<PageResult<ActiveUserVO>> getFollowers(
+            @Parameter(description = "目标用户ID (留空则获取当前登录用户的粉丝)") @RequestParam(required = false) Long userId,
+            @Parameter(description = "页码") @RequestParam(required = false) Integer page,
+            @Parameter(description = "每页大小") @RequestParam(required = false) Integer size,
+            HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        Long targetUserId = userId != null ? userId : currentUserId;
+        if (targetUserId == null) {
+            return Result.error(com.note.enums.ErrorCode.UNAUTHORIZED.getCode(), "请先登录查看粉丝列表");
+        }
+        PageResult<ActiveUserVO> result = followService.getFollowers(targetUserId, currentUserId, page, size);
+        return Result.success(result);
+    }
 }

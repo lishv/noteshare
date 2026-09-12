@@ -34,6 +34,23 @@ public class VerificationCodeService {
     }
 
     public void sendCode(String email, String scene) {
+        checkAndReserveQuota(email, scene);
+
+        String code = VerificationCodeUtil.generate(6);
+        String codeKey = CODE_KEY_PREFIX + scene + ":" + email;
+        redisTemplate.opsForValue().set(codeKey, code, expireMinutes, TimeUnit.MINUTES);
+
+        mailService.sendVerificationCode(email, code);
+    }
+
+    /**
+     * 为不需要实际投递邮件的请求占用发送配额，保持不同邮箱是否注册时的限流行为一致。
+     */
+    public void reserveSendQuota(String email, String scene) {
+        checkAndReserveQuota(email, scene);
+    }
+
+    private void checkAndReserveQuota(String email, String scene) {
         String intervalKey = INTERVAL_KEY_PREFIX + scene + ":" + email;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(intervalKey))) {
             throw new BusinessException(ErrorCode.VERIFICATION_CODE_SEND_TOO_FREQUENT);
@@ -45,19 +62,12 @@ public class VerificationCodeService {
             throw new BusinessException(ErrorCode.VERIFICATION_CODE_DAILY_LIMIT);
         }
 
-        String code = VerificationCodeUtil.generate(6);
-        String codeKey = CODE_KEY_PREFIX + scene + ":" + email;
-        redisTemplate.opsForValue().set(codeKey, code, expireMinutes, TimeUnit.MINUTES);
-
         redisTemplate.opsForValue().set(intervalKey, 1, sendInterval, TimeUnit.SECONDS);
-
         if (count == null) {
             redisTemplate.opsForValue().set(dailyKey, 1, 1, TimeUnit.DAYS);
         } else {
             redisTemplate.opsForValue().increment(dailyKey);
         }
-
-        mailService.sendVerificationCode(email, code);
     }
 
     public void verifyCode(String email, String scene, String inputCode) {

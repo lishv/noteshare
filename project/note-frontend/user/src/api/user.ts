@@ -5,6 +5,7 @@ import type {
   LoginResponse,
   RegisterRequest,
   ChangePasswordRequest,
+  ResetPasswordRequest,
   SendCodeRequest,
   User,
 } from '@/types'
@@ -22,6 +23,16 @@ export function login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
 // 获取当前用户信息
 export function getCurrentUser(): Promise<ApiResponse<User>> {
   return request.get('/users/current')
+}
+
+// 获取指定用户公开主页信息（包含笔记数、粉丝数、关注数及回关状态）
+export function getUserProfile(userId: number): Promise<ApiResponse<User>> {
+  return request.get(`/users/${userId}`)
+}
+
+// 获取系统推荐创作者（排除当前用户本人及已关注作者）
+export function getRecommendedCreators(limit = 5): Promise<ApiResponse<User[]>> {
+  return request.get('/users/recommended', { limit })
 }
 
 // 修改密码
@@ -44,4 +55,9 @@ export function updateUserBio(bio: string): Promise<ApiResponse<User>> {
 // 发送验证码
 export function sendVerificationCode(data: SendCodeRequest): Promise<ApiResponse> {
   return request.post('/auth/send-code', data)
+}
+
+// 使用邮箱验证码重置密码
+export function resetPassword(data: ResetPasswordRequest): Promise<ApiResponse> {
+  return request.post('/auth/reset-password', data)
 }

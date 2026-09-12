@@ -2,6 +2,8 @@ package com.note.service;
 
 import com.note.dto.LoginDTO;
 import com.note.dto.RegisterDTO;
+import com.note.dto.ResetPasswordDTO;
+import com.note.dto.SendCodeDTO;
 import com.note.entity.User;
 import com.note.enums.ErrorCode;
 import com.note.exception.BusinessException;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -34,6 +37,9 @@ public class AuthService {
     private Integer lockDuration;
 
     private static final String LOGIN_FAIL_KEY_PREFIX = "login:fail:";
+    private static final String RESET_PASSWORD_SCENE = "resetPassword";
+    private static final Set<String> ALLOWED_CODE_SCENES =
+            Set.of("register", "changePassword", RESET_PASSWORD_SCENE);
 
     public AuthService(UserMapper userMapper, JwtUtil jwtUtil, RedisTemplate<String, Object> redisTemplate, VerificationCodeService verificationCodeService) {
         this.userMapper = userMapper;
@@ -41,6 +47,22 @@ public class AuthService {
         this.redisTemplate = redisTemplate;
         this.verificationCodeService = verificationCodeService;
         this.passwordEncoder = new BCryptPasswordEncoder();
+    }
+
+    public void sendVerificationCode(SendCodeDTO dto) {
+        String email = dto.getEmail().trim();
+        String scene = dto.getScene().trim();
+        if (!ALLOWED_CODE_SCENES.contains(scene)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码场景无效");
+        }
+
+        // 忘记密码场景不向未注册邮箱发信，但仍占用发送配额，避免泄露账号是否存在。
+        if (RESET_PASSWORD_SCENE.equals(scene) && userMapper.selectByEmail(email) == null) {
+            verificationCodeService.reserveSendQuota(email, scene);
+            return;
+        }
+
+        verificationCodeService.sendCode(email, scene);
     }
 
     @Transactional
@@ -115,6 +137,46 @@ public class AuthService {
         loginVO.setUser(convertToVO(user));
 
         return loginVO;
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordDTO dto) {
+        String email = dto.getEmail().trim();
+        String verificationCode = dto.getVerificationCode().trim();
+
+        // 未注册邮箱无法取得该场景验证码，先验证可避免通过重置接口枚举账号。
+        verificationCodeService.verifyCode(email, RESET_PASSWORD_SCENE, verificationCode);
+
+        User user = userMapper.selectByEmail(email);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        if (user.getStatus() != null && user.getStatus() == 2) {
+            user.setStatus(1);
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(user);
+
+        invalidateUserAccess(user);
+    }
+
+    private void invalidateUserAccess(User user) {
+        try {
+            redisTemplate.opsForValue().set(
+                    "user:token:invalid_before:" + user.getId(),
+                    System.currentTimeMillis(),
+                    7,
+                    TimeUnit.DAYS
+            );
+            Set<String> keys = redisTemplate.keys(LOGIN_FAIL_KEY_PREFIX + user.getUsername() + ":*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception ignored) {
+            // Redis 不可用时不阻断已完成的密码更新，与已登录改密保持一致。
+        }
     }
 
     private void incrementFailCount(String key) {

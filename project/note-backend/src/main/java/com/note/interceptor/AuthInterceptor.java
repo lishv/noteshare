@@ -35,6 +35,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 公开接口白名单（无需token，但若携带则尝试解析用户身份）
         if (path.startsWith("/user/auth/") ||
             path.equals("/user/users/active") ||
+            path.equals("/user/users/recommended") ||
+            path.matches("^/user/users/\\d+$") ||
+            path.equals("/user/tags/popular") ||
+            path.equals("/user/share/qr-code") ||
             path.startsWith("/user/main-link/") ||
             path.startsWith("/user/notes/user/") ||
             path.equals("/user/search") ||
@@ -48,22 +52,21 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // GET /user/notes/{id}、GET /user/notes/{id}/comments 和 POST /user/notes/{id}/view 也公开（浏览笔记、获取评论、增加浏览量）
-        // 注意：POST /user/notes/{id}/comments、PUT /user/notes/{id} 和 DELETE /user/notes/{id} 需要认证
+        // GET /user/notes/{id}、GET /user/notes/{id}/comments、GET /user/notes/trending、GET /user/notes/recommend 和 POST /user/notes/{id}/view 也公开
         String method = request.getMethod();
         if (path.startsWith("/user/notes/") && !path.startsWith("/user/notes/user/")) {
             String sub = path.substring("/user/notes/".length());
-            if ("GET".equals(method) && (sub.matches("\\d+$") || sub.matches("\\d+/comments$"))) {
+            if ("GET".equals(method) && (sub.matches("\\d+$") || sub.matches("\\d+/comments$") || "trending".equals(sub) || "recommend".equals(sub))) {
                 tryExtractOptionalUser(request);
                 return true;
             }
             if ("POST".equals(method) && sub.matches("\\d+/view$")) return true;
         }
 
-        // GET /user/follow/{id}/status 查询关注状态为公开接口（可携带可选 Token）
+        // GET /user/follow/{id}/status 查询关注状态 与 GET /user/follow/followers 允许可选 Token
         if (path.startsWith("/user/follow/") && "GET".equals(method)) {
             String sub = path.substring("/user/follow/".length());
-            if (sub.matches("\\d+/status$")) {
+            if (sub.matches("\\d+/status$") || "followers".equals(sub)) {
                 tryExtractOptionalUser(request);
                 return true;
             }

@@ -2,9 +2,9 @@ package com.note.controller.user;
 
 import com.note.dto.LoginDTO;
 import com.note.dto.RegisterDTO;
+import com.note.dto.ResetPasswordDTO;
 import com.note.dto.SendCodeDTO;
 import com.note.service.AuthService;
-import com.note.service.VerificationCodeService;
 import com.note.util.JwtUtil;
 import com.note.vo.LoginVO;
 import com.note.vo.Result;
@@ -20,20 +20,25 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final VerificationCodeService verificationCodeService;
     private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService, VerificationCodeService verificationCodeService, JwtUtil jwtUtil) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
         this.authService = authService;
-        this.verificationCodeService = verificationCodeService;
         this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/send-code")
-    @Operation(summary = "发送验证码", description = "向邮箱发送验证码")
+    @Operation(summary = "发送验证码", description = "向邮箱发送注册、修改密码或重置密码验证码")
     public Result<Void> sendCode(@Valid @RequestBody SendCodeDTO dto) {
-        verificationCodeService.sendCode(dto.getEmail(), dto.getScene());
+        authService.sendVerificationCode(dto);
         return Result.success("验证码发送成功");
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "重置密码", description = "使用邮箱验证码重置用户密码")
+    public Result<Void> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
+        authService.resetPassword(dto);
+        return Result.success("密码重置成功");
     }
 
     @PostMapping("/register")

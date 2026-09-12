@@ -36,6 +36,9 @@
             show-password
           />
         </el-form-item>
+        <div class="password-help">
+          <router-link to="/forgot-password">忘记密码？</router-link>
+        </div>
         <el-form-item>
           <el-button
             type="primary"
@@ -194,6 +197,20 @@ async function handleLogin() {
   border-radius: var(--radius-sm);
   font-size: 15px;
   font-weight: 500;
+}
+
+.password-help {
+  margin: -4px 0 16px;
+  text-align: right;
+  font-size: 13px;
+}
+
+.password-help a {
+  color: var(--color-primary);
+}
+
+.password-help a:hover {
+  text-decoration: underline;
 }
 
 .auth-divider {

@@ -1,9 +1,24 @@
 <template>
   <router-view />
+  <div v-if="showNotificationCenter" class="global-notification-center">
+    <NotificationCenter />
+  </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { startTokenMonitor } from '@/utils/request'
+import { useUserStore } from '@/store/user'
+import NotificationCenter from '@/components/NotificationCenter.vue'
+
+const route = useRoute()
+const userStore = useUserStore()
+const showNotificationCenter = computed(() => {
+  const path = route.path.toLowerCase()
+  return userStore.isLoggedIn && path !== '/login' && path !== '/register'
+})
+
 startTokenMonitor()
 </script>
 
@@ -33,6 +48,20 @@ body {
 a {
   color: var(--color-primary);
   text-decoration: none;
+}
+
+.global-notification-center {
+  position: fixed;
+  top: 56px;
+  right: 20px;
+  z-index: 2000;
+}
+
+@media (max-width: 768px) {
+  .global-notification-center {
+    top: 12px;
+    right: 72px;
+  }
 }
 
 a:hover {

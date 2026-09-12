@@ -50,6 +50,14 @@
           <span v-else>{{ row.locationOrUrl }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="标签" width="160">
+        <template #default="{ row }">
+          <div v-if="row.tags && row.tags.length" style="display: flex; flex-wrap: wrap; gap: 4px;">
+            <el-tag v-for="t in row.tags" :key="t" size="small" type="info">{{ t }}</el-tag>
+          </div>
+          <span v-else style="color: #999; font-size: 12px;">无</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="viewCount" label="浏览量" width="80" />
       <el-table-column label="收藏" width="70">
         <template #default="{ row }">
@@ -62,13 +70,14 @@
         </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="发布时间" width="170" />
-      <el-table-column label="操作" width="240" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
           <el-button v-if="row.isDeleted === 0" link type="danger" @click="handleDelete(row)">删除</el-button>
           <el-button v-if="row.isDeleted === 1" link type="success" @click="handleRestore(row)">恢复</el-button>
           <el-button v-if="row.isDeleted === 0" link :type="row.isPinned === 1 ? 'warning' : 'primary'" @click="handleTogglePin(row)">
             {{ row.isPinned === 1 ? '取消置顶' : '置顶' }}
           </el-button>
+          <el-button link type="primary" @click="handleEditTags(row)">修改标签</el-button>
           <el-button link type="primary" @click="handleViewDetail(row)">查看</el-button>
         </template>
       </el-table-column>
@@ -111,6 +120,12 @@
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="发布时间">{{ detailData.createdAt }}</el-descriptions-item>
+        <el-descriptions-item label="标签" :span="2">
+          <div v-if="detailData.tags && detailData.tags.length" style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <el-tag v-for="t in detailData.tags" :key="t" size="small">{{ t }}</el-tag>
+          </div>
+          <span v-else style="color: #999;">无标签</span>
+        </el-descriptions-item>
         <el-descriptions-item v-if="detailData.noteType === 1" label="链接/位置" :span="2">
           <a v-if="isUrl(detailData.locationOrUrl)" :href="detailData.locationOrUrl" target="_blank" rel="noopener">{{ detailData.locationOrUrl }}</a>
           <span v-else>{{ detailData.locationOrUrl }}</span>
@@ -171,6 +186,30 @@
         <el-button type="primary" :loading="createLoading" @click="handleCreate">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 修改标签对话框 -->
+    <el-dialog v-model="tagsDialogVisible" title="修改笔记标签" width="500px">
+      <div style="margin-bottom: 14px; color: #606266; font-size: 14px;">
+        当前笔记：<strong>{{ currentEditNote?.title }}</strong>
+      </div>
+      <el-form label-width="80px">
+        <el-form-item label="标签列表">
+          <el-select
+            v-model="editTagList"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            placeholder="输入标签名称并回车添加"
+            style="width: 100%;"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="tagsDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="tagsSubmitLoading" @click="submitEditTags">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -192,6 +231,7 @@ import {
   pinNote,
   unpinNote,
   getNoteFavoriteCount,
+  updateNoteTags,
 } from '@/api/admin'
 
 const loading = ref(false)
@@ -207,6 +247,33 @@ const selectedIds = ref<number[]>([])
 
 const detailVisible = ref(false)
 const detailData = ref<any>({})
+
+const tagsDialogVisible = ref(false)
+const tagsSubmitLoading = ref(false)
+const currentEditNote = ref<any>(null)
+const editTagList = ref<string[]>([])
+
+const handleEditTags = (row: any) => {
+  currentEditNote.value = row
+  editTagList.value = row.tags ? [...row.tags] : []
+  tagsDialogVisible.value = true
+}
+
+const submitEditTags = async () => {
+  if (!currentEditNote.value) return
+  tagsSubmitLoading.value = true
+  try {
+    await updateNoteTags(currentEditNote.value.id, editTagList.value)
+    ElMessage.success('标签更新成功')
+    currentEditNote.value.tags = [...editTagList.value]
+    tagsDialogVisible.value = false
+    fetchData()
+  } catch (e: any) {
+    ElMessage.error(e.message || '更新标签失败')
+  } finally {
+    tagsSubmitLoading.value = false
+  }
+}
 
 const isUrl = (text?: string) => {
   if (!text) return false
