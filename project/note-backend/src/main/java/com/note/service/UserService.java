@@ -49,6 +49,23 @@ public class UserService {
         return convertToVO(user);
     }
 
+    public ActiveUserVO getUserProfile(Long userId, Long currentUserId) {
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "用户ID不能为空");
+        }
+        ActiveUserVO vo = userMapper.selectActiveUserById(userId);
+        if (vo == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "未找到该用户或作者信息");
+        }
+        if (currentUserId != null && !currentUserId.equals(userId)) {
+            boolean isFollowing = userFollowMapper.checkIsFollowing(currentUserId, userId) > 0;
+            vo.setIsFollowing(isFollowing);
+        } else {
+            vo.setIsFollowing(false);
+        }
+        return vo;
+    }
+
     @Transactional
     public void changePassword(Long userId, ChangePasswordDTO dto) {
         User user = userMapper.selectById(userId);
@@ -150,6 +167,13 @@ public class UserService {
         Page<ActiveUserVO> userPage = new Page<>(page, size);
         IPage<ActiveUserVO> result = userMapper.searchUsers(userPage, null, null);
         return PageResult.of(result.getTotal(), page, size, result.getRecords());
+    }
+
+    public List<ActiveUserVO> getRecommendedUsers(Long currentUserId, Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 5;
+        }
+        return userMapper.selectRecommendedUsers(currentUserId, limit);
     }
 
     private UserVO convertToVO(User user) {

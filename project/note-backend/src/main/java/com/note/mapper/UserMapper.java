@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
@@ -27,4 +28,6 @@ public interface UserMapper extends BaseMapper<User> {
     IPage<ActiveUserVO> searchUsers(Page<ActiveUserVO> page, @Param("keyword") String keyword, @Param("status") Integer status);
 
     ActiveUserVO selectActiveUserById(@Param("userId") Long userId);
+
+    List<ActiveUserVO> selectRecommendedUsers(@Param("currentUserId") Long currentUserId, @Param("limit") Integer limit);
 }

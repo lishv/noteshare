@@ -2,8 +2,10 @@ package com.note.controller.user;
 
 import com.note.entity.Tag;
 import com.note.service.TagService;
+import com.note.vo.PopularTagVO;
 import com.note.vo.Result;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,13 @@ public class TagController {
 
     public TagController(TagService tagService) {
         this.tagService = tagService;
+    }
+
+    @GetMapping("/popular")
+    @Operation(summary = "获取全站热门标签", description = "获取根据公开笔记关联数量排序的热门标签列表")
+    public Result<List<PopularTagVO>> getPopularTags(
+            @Parameter(description = "返回数量") @RequestParam(required = false, defaultValue = "10") Integer limit) {
+        return Result.success(tagService.getPopularTags(limit));
     }
 
     @GetMapping

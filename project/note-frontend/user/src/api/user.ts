@@ -24,6 +24,16 @@ export function getCurrentUser(): Promise<ApiResponse<User>> {
   return request.get('/users/current')
 }
 
+// 获取指定用户公开主页信息（包含笔记数、粉丝数、关注数及回关状态）
+export function getUserProfile(userId: number): Promise<ApiResponse<User>> {
+  return request.get(`/users/${userId}`)
+}
+
+// 获取系统推荐创作者（排除当前用户本人及已关注作者）
+export function getRecommendedCreators(limit = 5): Promise<ApiResponse<User[]>> {
+  return request.get('/users/recommended', { limit })
+}
+
 // 修改密码
 export function changePassword(data: ChangePasswordRequest): Promise<ApiResponse> {
   return request.put('/users/password', data)

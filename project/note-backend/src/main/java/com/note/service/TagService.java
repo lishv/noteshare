@@ -4,6 +4,7 @@ import com.note.entity.NoteTag;
 import com.note.entity.Tag;
 import com.note.mapper.NoteTagMapper;
 import com.note.mapper.TagMapper;
+import com.note.vo.PopularTagVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,5 +77,12 @@ public class TagService {
         if (tag == null || !tag.getUserId().equals(userId)) return;
         noteTagMapper.deleteByTagId(tagId);
         tagMapper.deleteById(tagId);
+    }
+
+    public List<PopularTagVO> getPopularTags(Integer limit) {
+        if (limit == null || limit <= 0) {
+            limit = 10;
+        }
+        return tagMapper.selectPopularTags(limit);
     }
 }

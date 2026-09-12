@@ -68,5 +68,61 @@ public class DatabaseInitializer implements CommandLineRunner {
         } catch (Exception e) {
             log.warn("DatabaseInitializer error creating t_user_follow: {}", e.getMessage());
         }
+
+        try {
+            jdbcTemplate.execute("ALTER TABLE `t_user` ADD COLUMN `bio` VARCHAR(100) DEFAULT NULL COMMENT '个性签名 (最多30字)' AFTER `avatar`");
+            log.info("DatabaseInitializer: added column 'bio' to t_user.");
+        } catch (Exception ignored) {
+            // 列已存在
+        }
+
+        try {
+            jdbcTemplate.execute("ALTER TABLE `t_note_item` ADD COLUMN `like_count` BIGINT NOT NULL DEFAULT 0 COMMENT '点赞数' AFTER `view_count`");
+            log.info("DatabaseInitializer: added column 'like_count' to t_note_item.");
+        } catch (Exception ignored) {
+            // 列已存在
+        }
+
+        try {
+            String createLikeTableSql = """
+                CREATE TABLE IF NOT EXISTS `t_note_like` (
+                  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '点赞主键 ID',
+                  `user_id` BIGINT NOT NULL COMMENT '点赞用户 ID',
+                  `note_id` BIGINT NOT NULL COMMENT '笔记 ID',
+                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '点赞时间',
+                  PRIMARY KEY (`id`),
+                  UNIQUE KEY `uk_user_note_like` (`user_id`, `note_id`),
+                  KEY `idx_note_id` (`note_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='笔记点赞表';
+            """;
+            jdbcTemplate.execute(createLikeTableSql);
+            log.info("DatabaseInitializer: t_note_like table verified/created successfully.");
+        } catch (Exception e) {
+            log.warn("DatabaseInitializer error creating t_note_like: {}", e.getMessage());
+        }
+
+        try {
+            String createNotificationTableSql = """
+                CREATE TABLE IF NOT EXISTS `t_notification` (
+                  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '通知主键 ID',
+                  `user_id` BIGINT NOT NULL COMMENT '接收通知的用户 ID',
+                  `sender_id` BIGINT DEFAULT NULL COMMENT '触发通知的用户 ID (系统通知为NULL)',
+                  `type` VARCHAR(32) NOT NULL COMMENT '通知类型: COMMENT, FOLLOW, LIKE, SYSTEM',
+                  `title` VARCHAR(128) NOT NULL COMMENT '通知简题',
+                  `content` TEXT NOT NULL COMMENT '通知详细内容',
+                  `target_type` VARCHAR(32) DEFAULT NULL COMMENT '关联对象类型: NOTE, USER, COMMENT, SYSTEM',
+                  `target_id` BIGINT DEFAULT NULL COMMENT '关联对象ID',
+                  `is_read` TINYINT NOT NULL DEFAULT 0 COMMENT '是否已读: 0-未读, 1-已读',
+                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                  PRIMARY KEY (`id`),
+                  KEY `idx_user_read` (`user_id`, `is_read`),
+                  KEY `idx_created` (`created_at`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='站内消息通知表';
+            """;
+            jdbcTemplate.execute(createNotificationTableSql);
+            log.info("DatabaseInitializer: t_notification table verified/created successfully.");
+        } catch (Exception e) {
+            log.warn("DatabaseInitializer error creating t_notification: {}", e.getMessage());
+        }
     }
 }

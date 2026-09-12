@@ -2,6 +2,7 @@ package com.note.controller.admin;
 
 import com.note.dto.BatchDeleteDTO;
 import com.note.dto.NoteDTO;
+import com.note.dto.UpdateTagsDTO;
 import com.note.service.AdminNoteService;
 import com.note.service.FavoriteService;
 import com.note.vo.NoteVO;
@@ -122,5 +123,18 @@ public class AdminNoteController {
     @Operation(summary = "笔记收藏数", description = "获取指定笔记的收藏数")
     public Result<Long> getNoteFavoriteCount(@PathVariable Long noteId) {
         return Result.success(favoriteService.countByNoteId(noteId));
+    }
+
+    @PutMapping("/{noteId}/tags")
+    @Operation(summary = "修改笔记标签", description = "管理员修改指定笔记的标签列表")
+    public Result<Void> updateNoteTags(
+            @PathVariable Long noteId,
+            @RequestBody UpdateTagsDTO dto,
+            HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        adminNoteService.updateNoteTags(noteId, dto != null ? dto.getTagNames() : null, adminId, adminUsername, ipAddress);
+        return Result.success("标签修改成功");
     }
 }

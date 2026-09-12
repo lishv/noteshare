@@ -54,16 +54,27 @@
           <p class="profile-meta">
             <span><strong>{{ noteTotal }}</strong> 篇笔记</span>
             <span class="meta-dot">·</span>
-            <span><strong>{{ followStats?.followerCount ?? userInfo.followerCount ?? 0 }}</strong> 位粉丝</span>
-            <span class="meta-dot" v-if="followStats?.followingCount !== undefined">·</span>
-            <span v-if="followStats?.followingCount !== undefined"><strong>{{ followStats.followingCount }}</strong> 关注</span>
+            <span class="meta-fans-clickable" @click="openFansDialog" title="点击查看粉丝列表">
+              <strong>{{ followStats?.followerCount ?? userInfo.followerCount ?? 0 }}</strong> 位粉丝
+            </span>
+            <span class="meta-dot" v-if="(followStats?.followingCount ?? userInfo.followingCount) !== undefined">·</span>
+            <span v-if="(followStats?.followingCount ?? userInfo.followingCount) !== undefined"><strong>{{ followStats?.followingCount ?? userInfo.followingCount ?? 0 }}</strong> 关注</span>
             <span class="meta-dot" v-if="userInfo.lastActiveAt">·</span>
             <span v-if="userInfo.lastActiveAt">最后活跃 {{ formatDate(userInfo.lastActiveAt) }}</span>
           </p>
         </div>
 
         <div class="profile-actions">
-          <template v-if="!isOwner">
+          <template v-if="isOwner">
+            <el-button round size="small" @click="openFansDialog">
+              查看粉丝 ({{ followStats?.followerCount ?? userInfo.followerCount ?? 0 }})
+            </el-button>
+            <el-button round size="small" type="danger" plain @click="router.push('/settings?tab=recycle')">
+              <el-icon><Delete /></el-icon>
+              笔记回收站
+            </el-button>
+          </template>
+          <template v-else>
             <el-button
               v-if="isLoggedIn"
               :type="followStats?.isFollowing ? 'default' : 'primary'"
@@ -145,18 +156,78 @@
           style="margin-top: 16px; justify-content: flex-end;"
         />
       </div>
+
+      <!-- 粉丝列表弹窗 -->
+      <el-dialog
+        v-model="fansDialogVisible"
+        :title="`${isOwner ? '我' : (userInfo?.username || '')} 的粉丝`"
+        width="500px"
+        append-to-body
+      >
+        <div v-loading="fansLoading" class="dialog-fans-container">
+          <template v-if="dialogFansList.length > 0">
+            <div
+              v-for="fan in dialogFansList"
+              :key="fan.id"
+              class="dialog-fan-card"
+              @click="handleGoFanProfile(fan.id)"
+            >
+              <el-avatar :size="44" :src="fan.avatar || defaultAvatar" class="dialog-fan-avatar">
+                {{ fan.username?.charAt(0) || 'U' }}
+              </el-avatar>
+              <div class="dialog-fan-info">
+                <div class="dialog-fan-name-row">
+                  <span class="dialog-fan-name">{{ fan.username }}</span>
+                  <span v-if="fan.bio" class="dialog-fan-bio" :title="fan.bio">“{{ fan.bio }}”</span>
+                </div>
+                <div class="dialog-fan-meta">
+                  <span>{{ fan.noteCount || 0 }} 篇笔记</span>
+                  <span class="meta-dot">·</span>
+                  <span>{{ fan.followerCount || 0 }} 粉丝</span>
+                </div>
+              </div>
+              <div v-if="isLoggedIn && fan.id !== userStore.userInfo?.id" class="dialog-fan-action" @click.stop>
+                <el-button
+                  v-if="fan.isFollowing"
+                  type="success"
+                  plain
+                  size="small"
+                  round
+                  :loading="followActionLoadingId === fan.id"
+                  @click="handleToggleFollowFan(fan)"
+                >
+                  <el-icon><Check /></el-icon>
+                  互相关注
+                </el-button>
+                <el-button
+                  v-else
+                  type="primary"
+                  size="small"
+                  round
+                  :loading="followActionLoadingId === fan.id"
+                  @click="handleToggleFollowFan(fan)"
+                >
+                  <el-icon><Plus /></el-icon>
+                  回关
+                </el-button>
+              </div>
+            </div>
+          </template>
+          <el-empty v-else description="暂无粉丝关注" :image-size="80" />
+        </div>
+      </el-dialog>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Link, ArrowRight, Lock, Plus, Check, EditPen } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ArrowLeft, Link, ArrowRight, Lock, Plus, Check, EditPen, Delete } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
-import { updateUserBio } from '@/api/user'
-import { getActiveUsers, getMainLink, getUserNotes, followUser, unfollowUser, getFollowStats } from '@/api/note'
+import { updateUserBio, getUserProfile } from '@/api/user'
+import { getMainLink, getUserNotes, followUser, unfollowUser, getFollowStats, getFollowers } from '@/api/note'
 import type { User, MainLink, NoteItem, FollowStatsVO } from '@/types'
 import { isUrl, formatDate } from '@/utils/helpers'
 
@@ -178,6 +249,12 @@ const noteTotal = ref(0)
 const notePage = ref(1)
 const noteSize = ref(10)
 const notesLoading = ref(false)
+
+// 粉丝弹窗相关
+const fansDialogVisible = ref(false)
+const fansLoading = ref(false)
+const dialogFansList = ref<User[]>([])
+const followActionLoadingId = ref<number | null>(null)
 
 // 个性签名即时编辑
 const isEditingBio = ref(false)
@@ -224,15 +301,28 @@ async function handleSaveBio() {
 }
 
 const fetchProfile = async () => {
+  const userId = Number(route.params.id)
+  if (!userId || isNaN(userId)) {
+    userInfo.value = null
+    loading.value = false
+    return
+  }
   loading.value = true
   try {
-    const userId = Number(route.params.id)
     // 异步查询作者关注统计与状态
     fetchFollowStats(userId)
 
-    // 从全局活跃作者检索中匹配用户信息
-    const res = await getActiveUsers({ keyword: '', page: 1, size: 200 })
-    userInfo.value = res.data.list.find((u: User) => u.id === userId) || null
+    // 直接请求该用户主页公开信息
+    const res = await getUserProfile(userId)
+    userInfo.value = res.data
+    if (!followStats.value && res.data) {
+      followStats.value = {
+        userId,
+        isFollowing: res.data.isFollowing || false,
+        followerCount: res.data.followerCount || 0,
+        followingCount: (res.data as any).followingCount || 0,
+      }
+    }
 
     // 获取主链接
     try {
@@ -241,8 +331,11 @@ const fetchProfile = async () => {
     } catch { mainLink.value = null }
 
     await fetchNotes()
-  } catch { /* handled */ }
-  finally { loading.value = false }
+  } catch {
+    userInfo.value = null
+  } finally {
+    loading.value = false
+  }
 }
 
 const fetchFollowStats = async (userId: number) => {
@@ -295,6 +388,70 @@ const fetchNotes = async () => {
 const openLink = (url: string) => {
   if (isUrl(url)) window.open(url, '_blank', 'noopener')
 }
+
+// 打开粉丝列表弹窗
+const openFansDialog = async () => {
+  const userId = Number(route.params.id)
+  if (!userId) return
+  fansDialogVisible.value = true
+  fansLoading.value = true
+  try {
+    const res = await getFollowers({ userId, page: 1, size: 100 })
+    dialogFansList.value = res.data?.list || []
+  } catch {
+    dialogFansList.value = []
+  } finally {
+    fansLoading.value = false
+  }
+}
+
+// 弹窗中回关/取消关注粉丝
+const handleToggleFollowFan = async (fan: User) => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  followActionLoadingId.value = fan.id
+  try {
+    if (fan.isFollowing) {
+      await unfollowUser(fan.id)
+      ElMessage.success('已取消关注')
+      fan.isFollowing = false
+      if (Number(route.params.id) === fan.id && followStats.value) {
+        followStats.value.isFollowing = false
+        followStats.value.followerCount = Math.max(0, (followStats.value.followerCount || 1) - 1)
+      }
+    } else {
+      await followUser(fan.id)
+      ElMessage.success('关注成功')
+      fan.isFollowing = true
+      if (Number(route.params.id) === fan.id && followStats.value) {
+        followStats.value.isFollowing = true
+        followStats.value.followerCount = (followStats.value.followerCount || 0) + 1
+      }
+    }
+  } catch (e: any) {
+    ElMessage.error(e.message || '操作失败')
+  } finally {
+    followActionLoadingId.value = null
+  }
+}
+
+// 点击粉丝条目跳转主页
+const handleGoFanProfile = (fanId: number) => {
+  fansDialogVisible.value = false
+  router.push(`/user/${fanId}`)
+}
+
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      notePage.value = 1
+      fetchProfile()
+    }
+  }
+)
 
 onMounted(fetchProfile)
 </script>
@@ -453,5 +610,81 @@ onMounted(fetchProfile)
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 12px;
+}
+
+.meta-fans-clickable {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.meta-fans-clickable:hover {
+  background-color: var(--el-color-primary-light-9, #ecf5ff);
+  color: var(--color-primary, #409eff);
+}
+
+.dialog-fans-container {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 4px 6px;
+}
+
+.dialog-fan-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--color-bg-page, #f8f9fa);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.dialog-fan-card:hover {
+  background-color: #f0f2f5;
+  transform: translateY(-1px);
+}
+
+.dialog-fan-avatar {
+  flex-shrink: 0;
+}
+
+.dialog-fan-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog-fan-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-fan-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #303133);
+}
+
+.dialog-fan-bio {
+  font-size: 12px;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 170px;
+}
+
+.dialog-fan-meta {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.dialog-fan-action {
+  flex-shrink: 0;
 }
 </style>
