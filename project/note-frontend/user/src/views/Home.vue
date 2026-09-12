@@ -42,6 +42,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item command="myNotes">我的笔记</el-dropdown-item>
                 <el-dropdown-item command="favorites">我的收藏</el-dropdown-item>
+                <el-dropdown-item command="likes">我的点赞</el-dropdown-item>
                 <el-dropdown-item command="settings">个人设置</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
@@ -116,6 +117,10 @@
                 <el-icon><Star /></el-icon>
                 <span>我的收藏夹</span>
               </div>
+              <div class="workbench-item" @click="$router.push('/likes')">
+                <el-icon><Pointer /></el-icon>
+                <span>我的点赞</span>
+              </div>
               <div class="workbench-item" @click="$router.push('/note/editor')">
                 <el-icon><EditPen /></el-icon>
                 <span>创作新笔记</span>
@@ -143,6 +148,11 @@
             <el-tooltip content="我的收藏夹" placement="right">
               <div class="collapsed-icon-btn" @click="$router.push('/favorites')">
                 <el-icon :size="18"><Star /></el-icon>
+              </div>
+            </el-tooltip>
+            <el-tooltip content="我的点赞" placement="right">
+              <div class="collapsed-icon-btn" @click="$router.push('/likes')">
+                <el-icon :size="18"><Pointer /></el-icon>
               </div>
             </el-tooltip>
             <el-tooltip content="创作新笔记" placement="right">
@@ -1233,6 +1243,7 @@ import {
   TrendCharts,
   Refresh,
   View,
+  Pointer,
   Star,
   ChatDotRound,
   Compass,
@@ -2053,6 +2064,8 @@ async function handleUserCommand(command: string) {
     }
   } else if (command === 'favorites') {
     router.push('/favorites')
+  } else if (command === 'likes') {
+    router.push('/likes')
   } else if (command === 'settings') {
     router.push('/settings')
   } else if (command === 'logout') {

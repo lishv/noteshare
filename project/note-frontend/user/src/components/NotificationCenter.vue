@@ -76,34 +76,53 @@
           />
 
           <template v-else>
-            <button
+            <div
               v-for="item in notifications"
               :key="item.id"
               class="notification-item"
               :class="{ 'notification-item--unread': item.isRead === 0 }"
-              type="button"
-              :disabled="markingId === item.id"
-              @click="handleNotificationClick(item)"
             >
-              <el-avatar
-                :size="36"
-                :src="item.senderAvatar || undefined"
-                :class="['notification-item__avatar', `notification-item__avatar--${item.type.toLowerCase()}`]"
+              <button
+                class="notification-item__main"
+                type="button"
+                :disabled="markingId === item.id || removingId === item.id"
+                @click="handleNotificationClick(item)"
               >
-                <el-icon><component :is="notificationIcon(item.type)" /></el-icon>
-              </el-avatar>
+                <el-avatar
+                  :size="36"
+                  :src="item.senderAvatar || undefined"
+                  :class="['notification-item__avatar', `notification-item__avatar--${item.type.toLowerCase()}`]"
+                >
+                  <el-icon><component :is="notificationIcon(item.type)" /></el-icon>
+                </el-avatar>
 
-              <span class="notification-item__content">
-                <span class="notification-item__title-row">
-                  <strong>{{ item.title }}</strong>
-                  <span v-if="item.isRead === 0" class="notification-item__dot" aria-label="未读" />
+                <span class="notification-item__content">
+                  <span class="notification-item__title-row">
+                    <strong>{{ item.title }}</strong>
+                    <span v-if="item.isRead === 0" class="notification-item__dot" aria-label="未读" />
+                  </span>
+                  <span v-if="item.content" class="notification-item__message">{{ item.content }}</span>
+                  <span class="notification-item__time">{{ formatDate(item.createdAt) }}</span>
                 </span>
-                <span v-if="item.content" class="notification-item__message">{{ item.content }}</span>
-                <span class="notification-item__time">{{ formatDate(item.createdAt) }}</span>
-              </span>
 
-              <el-icon v-if="canNavigate(item)" class="notification-item__arrow"><ArrowRight /></el-icon>
-            </button>
+                <el-icon v-if="canNavigate(item)" class="notification-item__arrow"><ArrowRight /></el-icon>
+              </button>
+
+              <el-tooltip content="移除这条通知" placement="top">
+                <el-button
+                  text
+                  circle
+                  size="small"
+                  class="notification-item__remove"
+                  :loading="removingId === item.id"
+                  :disabled="markingId === item.id"
+                  :aria-label="`移除通知：${item.title}`"
+                  @click.stop="handleRemove(item)"
+                >
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </el-tooltip>
+            </div>
 
             <div v-if="total > notifications.length" class="notification-panel__footer">
               <el-button link type="primary" size="small" :loading="loadingMore" @click="loadMore">
@@ -125,6 +144,7 @@ import {
   Bell,
   ChatDotRound,
   CircleCheck,
+  Delete,
   Refresh,
   Star,
   UserFilled,
@@ -136,6 +156,7 @@ import {
   getUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  removeNotification,
 } from '@/api/note'
 import { useUserStore } from '@/store/user'
 import type { NotificationItem } from '@/types'
@@ -155,6 +176,7 @@ const currentPage = ref(1)
 const loading = ref(false)
 const loadingMore = ref(false)
 const markingId = ref<number | null>(null)
+const removingId = ref<number | null>(null)
 const markingAll = ref(false)
 const errorMessage = ref('')
 let pollTimer: ReturnType<typeof setInterval> | undefined
@@ -296,6 +318,31 @@ async function markAsRead(item: NotificationItem): Promise<boolean> {
     return false
   } finally {
     markingId.value = null
+  }
+}
+
+async function handleRemove(item: NotificationItem) {
+  if (removingId.value !== null || markingId.value === item.id) return
+
+  removingId.value = item.id
+  const wasUnread = item.isRead === 0
+  try {
+    await removeNotification(item.id)
+    notifications.value = notifications.value.filter(notification => notification.id !== item.id)
+    total.value = Math.max(0, total.value - 1)
+    if (wasUnread) {
+      unreadCount.value = Math.max(0, unreadCount.value - 1)
+    }
+    ElMessage.success('通知已移除')
+
+    // 当前页删空后尝试重新拉取，避免分页停留在空白页。
+    if (notifications.value.length === 0 && total.value > 0) {
+      await fetchNotifications()
+    }
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '移除通知失败，请稍后重试')
+  } finally {
+    removingId.value = null
   }
 }
 
@@ -468,35 +515,64 @@ onBeforeUnmount(stopPolling)
   width: 100%;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px 4px;
-  border: 0;
+  gap: 4px;
+  padding: 0;
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: transparent;
   color: inherit;
-  cursor: pointer;
-  font: inherit;
   text-align: left;
   transition: background-color 0.16s ease;
 }
 
-.notification-item:hover:not(:disabled),
-.notification-item:focus-visible:not(:disabled) {
+.notification-item:hover,
+.notification-item:focus-within {
   background: var(--el-fill-color-light);
-  outline: none;
-}
-
-.notification-item:disabled {
-  cursor: wait;
 }
 
 .notification-item--unread {
   background: var(--el-color-primary-light-9);
 }
 
-.notification-item--unread:hover:not(:disabled),
-.notification-item--unread:focus-visible:not(:disabled) {
+.notification-item--unread:hover,
+.notification-item--unread:focus-within {
   background: var(--el-color-primary-light-8);
+}
+
+.notification-item__main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0 12px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.notification-item__main:hover,
+.notification-item__main:focus-visible {
+  outline: none;
+}
+
+.notification-item__main:disabled {
+  cursor: wait;
+}
+
+.notification-item__remove {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-right: 1px;
+  color: var(--el-text-color-placeholder);
+}
+
+.notification-item__remove:hover,
+.notification-item__remove:focus-visible {
+  color: var(--el-color-danger);
+  background: var(--el-color-danger-light-9);
 }
 
 .notification-item__avatar {

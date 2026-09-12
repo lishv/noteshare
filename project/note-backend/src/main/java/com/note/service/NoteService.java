@@ -524,6 +524,21 @@ public class NoteService {
         return result;
     }
 
+    // ==================== 我的点赞 ====================
+
+    /**
+     * 分页查询当前用户点赞过的、仍然可访问的公开笔记。
+     * 点赞记录和笔记的过滤、排序及分页均在数据库层完成。
+     */
+    public PageResult<NoteVO> getMyLikes(Long userId, Integer page, Integer size) {
+        int currentPage = page != null && page > 0 ? page : 1;
+        int pageSize = size != null && size > 0 ? Math.min(size, 100) : 10;
+        Page<NoteVO> notePage = new Page<>(currentPage, pageSize);
+        IPage<NoteVO> result = noteLikeMapper.selectLikedNotes(notePage, userId, userId);
+        populateTags(result.getRecords());
+        return PageResult.of(result.getTotal(), currentPage, pageSize, result.getRecords());
+    }
+
     // ==================== 点赞机制 ====================
 
     /**

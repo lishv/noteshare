@@ -48,6 +48,17 @@ public class NotificationController {
         return Result.success(count);
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "移除通知", description = "移除当前登录用户的一条通知，不允许操作其他用户的消息")
+    public Result<Void> removeNotification(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return Result.error(ErrorCode.UNAUTHORIZED.getCode(), "请先登录");
+        }
+        notificationService.removeNotification(id, userId);
+        return Result.success("通知已移除", null);
+    }
+
     @PutMapping("/{id}/read")
     @Operation(summary = "标记单条已读", description = "将指定的通知标记为已读")
     public Result<Void> markAsRead(@PathVariable Long id, HttpServletRequest request) {

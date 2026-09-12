@@ -217,6 +217,21 @@ public class NoteController {
         return Result.success(result);
     }
 
+    // ==================== 我的点赞 ====================
+
+    @GetMapping("/my-likes")
+    @Operation(summary = "我的点赞", description = "分页获取当前用户点赞过的、仍可访问的笔记内容")
+    public Result<PageResult<NoteVO>> getMyLikes(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return Result.error(ErrorCode.UNAUTHORIZED.getCode(), "请先登录查看我的点赞");
+        }
+        return Result.success(noteService.getMyLikes(userId, page, size));
+    }
+
     // ==================== 点赞机制 ====================
 
     @PostMapping("/{noteId}/like")

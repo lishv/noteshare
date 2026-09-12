@@ -204,6 +204,7 @@ export interface NotificationItem {
   targetType?: string
   targetId?: number
   isRead: number
+  isDeleted?: number
   createdAt: string
 }
 

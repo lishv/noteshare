@@ -45,6 +45,7 @@ public class NotificationService {
         notification.setTargetType(targetType);
         notification.setTargetId(targetId);
         notification.setIsRead(0);
+        notification.setIsDeleted(0);
         notification.setCreatedAt(LocalDateTime.now());
         notificationMapper.insert(notification);
     }
@@ -58,6 +59,20 @@ public class NotificationService {
         Page<NotificationVO> pageParam = new Page<>(p, s);
         IPage<NotificationVO> result = notificationMapper.selectNotificationPage(pageParam, userId, type);
         return PageResult.of(result.getTotal(), (int) result.getCurrent(), (int) result.getSize(), result.getRecords());
+    }
+
+    /**
+     * 移除当前用户的一条通知（软删除，保留管理员审查能力）
+     */
+    @Transactional
+    public void removeNotification(Long id, Long userId) {
+        if (id == null || userId == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "通知不存在或无权操作");
+        }
+        int updated = notificationMapper.logicalDeleteForUser(id, userId);
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "通知不存在或无权操作");
+        }
     }
 
     /**

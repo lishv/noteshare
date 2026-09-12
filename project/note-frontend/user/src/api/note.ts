@@ -237,6 +237,13 @@ export function checkNoteLiked(noteId: number): Promise<ApiResponse<boolean>> {
   return request.get(`/notes/${noteId}/like`)
 }
 
+export function getMyLikes(params?: {
+  page?: number
+  size?: number
+}): Promise<ApiResponse<PageResult<NoteItem>>> {
+  return request.get('/notes/my-likes', params)
+}
+
 // ========== 站内消息通知 ==========
 export function getNotifications(params?: {
   type?: string
@@ -252,6 +259,10 @@ export function getUnreadNotificationCount(): Promise<ApiResponse<number>> {
 
 export function markNotificationAsRead(id: number): Promise<ApiResponse<null>> {
   return request.put(`/notifications/${id}/read`)
+}
+
+export function removeNotification(id: number): Promise<ApiResponse<null>> {
+  return request.delete(`/notifications/${id}`)
 }
 
 export function markAllNotificationsAsRead(): Promise<ApiResponse<null>> {

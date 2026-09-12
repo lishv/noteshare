@@ -36,6 +36,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/likes',
+      name: 'Likes',
+      component: () => import('@/views/Likes.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/note/editor',
       name: 'NoteEditor',
       component: () => import('@/views/Editor.vue'),

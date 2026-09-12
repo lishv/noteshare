@@ -84,8 +84,40 @@ export const getInteractionStats = () => request.get('/stats/interaction-distrib
 export const getPlatformTrends = (days?: number) => request.get('/stats/platform-trend', { params: { days } })
 
 // 操作日志
-export const getLogList = (params: { page?: number; size?: number; operationType?: string; startTime?: string; endTime?: string }) =>
-  request.get('/logs', { params })
+export const getLogList = (params: {
+  page?: number
+  size?: number
+  operationType?: string
+  startTime?: string
+  endTime?: string
+}) => request.get('/logs', { params })
+
+// 评论管理
+export const getCommentList = (params: {
+  page?: number
+  size?: number
+  keyword?: string
+  isDeleted?: number
+  startTime?: string
+  endTime?: string
+}) => request.get('/comments', { params })
+export const deleteComment = (commentId: number) => request.put(`/comments/${commentId}/delete`)
+export const restoreComment = (commentId: number) => request.put(`/comments/${commentId}/restore`)
+
+// 用户消息管理
+export const getNotificationList = (params: {
+  page?: number
+  size?: number
+  keyword?: string
+  userId?: number
+  type?: string
+  isRead?: number
+  isDeleted?: number
+  startTime?: string
+  endTime?: string
+}) => request.get('/notifications', { params })
+export const deleteNotification = (notificationId: number) => request.put(`/notifications/${notificationId}/delete`)
+export const restoreNotification = (notificationId: number) => request.put(`/notifications/${notificationId}/restore`)
 
 // 管理员管理
 export const getAdminList = (params: { page?: number; size?: number; keyword?: string }) =>

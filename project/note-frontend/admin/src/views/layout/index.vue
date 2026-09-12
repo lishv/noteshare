@@ -21,6 +21,14 @@
           <el-icon><Document /></el-icon>
           <span>笔记管理</span>
         </el-menu-item>
+        <el-menu-item index="/comments">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>评论管理</span>
+        </el-menu-item>
+        <el-menu-item index="/notifications">
+          <el-icon><Bell /></el-icon>
+          <span>用户消息</span>
+        </el-menu-item>
         <el-menu-item index="/links">
           <el-icon><Link /></el-icon>
           <span>链接管理</span>
@@ -102,6 +110,8 @@ import {
   Odometer,
   User,
   Document,
+  ChatDotRound,
+  Bell,
   Link,
   Lock,
   DataLine,
