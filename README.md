@@ -9,19 +9,17 @@
 - **后端服务**：统一认证、业务接口、数据访问、缓存和文件存储。
 
 ## 产品截图
-![输入图片说明](project/deploy/5920ba1c22a7434cda9ee4a793755273.png)
 
 ### 用户端首页
 
 首页提供智能综合推荐、热门榜、关注动态、作者专栏、热门标签、推荐作者和学习数据概览。
-
-![输入图片说明](project/deploy/392afdc5f6fd9970f5379e1e47cdb043.png)
+![输入图片说明](project/deploy/5920ba1c22a7434cda9ee4a793755273.png)
 
 ### 笔记详情页
 
 详情页支持 Markdown 内容阅读、文章目录、点赞、收藏、评论、Markdown 导出和分享海报。
 
-![笔记详情页](./软著/392afdc5f6fd9970f5379e1e47cdb043.png)
+![输入图片说明](project/deploy/392afdc5f6fd9970f5379e1e47cdb043.png)
 
 ## 主要功能
 
