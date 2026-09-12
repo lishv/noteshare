@@ -174,7 +174,6 @@ project/
 │   └── admin/                           # 管理端前端
 │
 ├── project/deploy/                       # Nginx 与集群部署配置
-├── 软著/                                 # 软件著作权材料与产品截图
 ├── prd.md                                # 用户端产品需求
 ├── admin-prd.md                          # 管理端产品需求
 └── README.md
@@ -398,4 +397,3 @@ start-cluster.bat
 | 管理端数据库与接口设计 | `管理端数据库与接口设计计划.md` | 管理端数据表与接口设计 |
 | 管理端接口详情 | `管理端接口数据库.md` | 管理端接口示例 |
 | OpenAPI 文档 | `combined-api-docs.json` | 用户端与管理端 API 定义 |
-| 软件著作权材料 | `软著/` | 说明文档、源码文档和产品截图 |
