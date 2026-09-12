@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.note.mapper.NotificationMapper">
+
+    <select id="selectAdminNotificationPage" resultType="com.note.vo.AdminNotificationVO">
+        SELECT
+            n.id,
+            n.user_id AS userId,
+            receiver.username AS receiverUsername,
+            receiver.avatar AS receiverAvatar,
+            n.sender_id AS senderId,
+            sender.username AS senderUsername,
+            sender.avatar AS senderAvatar,
+            n.type,
+            n.title,
+            n.content,
+            n.target_type AS targetType,
+            n.target_id AS targetId,
+            CASE
+                WHEN n.target_type = 'NOTE' THEN target_note.title
+                WHEN n.target_type = 'COMMENT' THEN target_comment.content
+                WHEN n.target_type = 'USER' THEN target_user.username
+                ELSE NULL
+            END AS targetTitle,
+            n.is_read AS isRead,
+            n.is_deleted AS isDeleted,
+            n.created_at AS createdAt
+        FROM t_notification n
+        LEFT JOIN t_user receiver ON n.user_id = receiver.id
+        LEFT JOIN t_user sender ON n.sender_id = sender.id
+        LEFT JOIN t_note_item target_note
+            ON n.target_type = 'NOTE' AND n.target_id = target_note.id
+        LEFT JOIN t_comment target_comment
+            ON n.target_type = 'COMMENT' AND n.target_id = target_comment.id
+        LEFT JOIN t_user target_user
+            ON n.target_type = 'USER' AND n.target_id = target_user.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (n.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR n.content LIKE CONCAT('%', #{keyword}, '%')
+                     OR receiver.username LIKE CONCAT('%', #{keyword}, '%')
+                     OR sender.username LIKE CONCAT('%', #{keyword}, '%')
+                     OR target_note.title LIKE CONCAT('%', #{keyword}, '%')
+                     OR target_comment.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="userId != null">
+                AND n.user_id = #{userId}
+            </if>
+            <if test="type != null and type != ''">
+                AND n.type = #{type}
+            </if>
+            <if test="isRead != null">
+                AND n.is_read = #{isRead}
+            </if>
+            <if test="isDeleted != null">
+                AND n.is_deleted = #{isDeleted}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND n.created_at &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND n.created_at &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY n.created_at DESC, n.id DESC
+    </select>
+
+</mapper>

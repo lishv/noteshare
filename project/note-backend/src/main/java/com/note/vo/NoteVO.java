@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Schema(description = "笔记信息响应数据")
@@ -52,6 +53,24 @@ public class NoteVO {
 
     @Schema(description = "收藏数")
     private Long favoriteCount;
+
+    @Schema(description = "点赞数")
+    private Long likeCount;
+
+    @Schema(description = "评论数")
+    private Long commentCount;
+
+    @Schema(description = "当前登录用户是否已点赞")
+    private Boolean isLiked;
+
+    @Schema(description = "当前登录用户是否已收藏")
+    private Boolean isFavorited;
+
+    @Schema(description = "标签名称列表")
+    private List<String> tags;
+
+    @Schema(description = "删除时间 (回收站状态下有效)")
+    private LocalDateTime deletedAt;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;

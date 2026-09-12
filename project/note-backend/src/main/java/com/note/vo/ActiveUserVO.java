@@ -38,6 +38,12 @@ public class ActiveUserVO {
     @Schema(description = "关注量/粉丝数", example = "10")
     private Integer followerCount;
 
+    @Schema(description = "关注作者数/关注数", example = "5")
+    private Integer followingCount;
+
+    @Schema(description = "当前登录用户是否已关注该用户 (回关状态)", example = "false")
+    private Boolean isFollowing;
+
     @Schema(description = "注册时间")
     private LocalDateTime createdAt;
 }

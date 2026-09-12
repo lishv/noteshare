@@ -17,10 +17,12 @@ public class FavoriteService {
 
     private final NoteFavoriteMapper favoriteMapper;
     private final NoteItemMapper noteItemMapper;
+    private final TagService tagService;
 
-    public FavoriteService(NoteFavoriteMapper favoriteMapper, NoteItemMapper noteItemMapper) {
+    public FavoriteService(NoteFavoriteMapper favoriteMapper, NoteItemMapper noteItemMapper, TagService tagService) {
         this.favoriteMapper = favoriteMapper;
         this.noteItemMapper = noteItemMapper;
+        this.tagService = tagService;
     }
 
     public void addFavorite(Long userId, Long noteId) {
@@ -68,6 +70,10 @@ public class FavoriteService {
         List<NoteVO> notes = pageIds.stream()
                 .map(noteItemMapper::selectNoteWithUserById)
                 .filter(n -> n != null)
+                .peek(n -> {
+                    n.setIsFavorited(true);
+                    n.setTags(tagService.getTagNamesForNote(n.getId()));
+                })
                 .toList();
 
         return PageResult.of((long) total, page, size, notes);

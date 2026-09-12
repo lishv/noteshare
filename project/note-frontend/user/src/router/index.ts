@@ -19,6 +19,11 @@ const router = createRouter({
       component: () => import('@/views/Register.vue'),
     },
     {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: () => import('@/views/ForgotPassword.vue'),
+    },
+    {
       path: '/settings',
       name: 'Settings',
       component: () => import('@/views/Settings.vue'),
@@ -33,6 +38,12 @@ const router = createRouter({
       path: '/favorites',
       name: 'Favorites',
       component: () => import('@/views/Favorites.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/likes',
+      name: 'Likes',
+      component: () => import('@/views/Likes.vue'),
       meta: { requiresAuth: true },
     },
     {

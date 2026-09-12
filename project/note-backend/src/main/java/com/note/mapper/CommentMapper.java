@@ -1,7 +1,10 @@
 package com.note.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.note.entity.Comment;
+import com.note.vo.AdminCommentVO;
 import com.note.vo.CommentVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -29,4 +32,22 @@ public interface CommentMapper extends BaseMapper<Comment> {
 
     @Update("UPDATE t_comment SET is_deleted = 1, updated_at = NOW() WHERE id = #{id} AND is_deleted = 0")
     int logicalDeleteComment(@Param("id") Long id);
+
+    /**
+     * 管理端分页查询全部评论，包含已删除评论。
+     */
+    IPage<AdminCommentVO> selectAdminCommentPage(
+            Page<AdminCommentVO> page,
+            @Param("keyword") String keyword,
+            @Param("isDeleted") Integer isDeleted,
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime);
+
+    @Update("UPDATE t_comment SET is_deleted = 1, updated_at = NOW() " +
+            "WHERE id = #{id} AND is_deleted = 0")
+    int logicalDeleteByAdmin(@Param("id") Long id);
+
+    @Update("UPDATE t_comment SET is_deleted = 0, updated_at = NOW() " +
+            "WHERE id = #{id} AND is_deleted = 1")
+    int restoreByAdmin(@Param("id") Long id);
 }

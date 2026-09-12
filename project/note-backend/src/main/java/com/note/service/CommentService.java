@@ -23,15 +23,18 @@ public class CommentService {
     private final NoteItemMapper noteItemMapper;
     private final UserMapper userMapper;
     private final SensitiveWordService sensitiveWordService;
+    private final NotificationService notificationService;
 
     public CommentService(CommentMapper commentMapper,
                           NoteItemMapper noteItemMapper,
                           UserMapper userMapper,
-                          SensitiveWordService sensitiveWordService) {
+                          SensitiveWordService sensitiveWordService,
+                          NotificationService notificationService) {
         this.commentMapper = commentMapper;
         this.noteItemMapper = noteItemMapper;
         this.userMapper = userMapper;
         this.sensitiveWordService = sensitiveWordService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -90,6 +93,34 @@ public class CommentService {
             user.setLastActiveAt(LocalDateTime.now());
             userMapper.updateById(user);
         }
+
+        // 发送评论/回复站内通知
+        try {
+            String commenterName = user != null ? user.getUsername() : "用户";
+            if (dto.getReplyToUserId() != null) {
+                // 回复某条评论
+                notificationService.sendNotification(
+                        dto.getReplyToUserId(),
+                        userId,
+                        "COMMENT",
+                        commenterName + " 回复了你的评论",
+                        dto.getContent().trim(),
+                        "NOTE",
+                        noteId
+                );
+            } else if (!note.getUserId().equals(userId)) {
+                // 评论某篇笔记
+                notificationService.sendNotification(
+                        note.getUserId(),
+                        userId,
+                        "COMMENT",
+                        commenterName + " 评论了你的笔记《" + note.getTitle() + "》",
+                        dto.getContent().trim(),
+                        "NOTE",
+                        noteId
+                );
+            }
+        } catch (Exception ignored) {}
 
         CommentVO vo = commentMapper.selectCommentVOById(comment.getId());
         if (vo != null) {

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.note.mapper.NoteLikeMapper">
+
+    <!-- 查询当前用户点赞过的、当前仍可访问的笔记。分页在数据库层完成。 -->
+    <select id="selectLikedNotes" resultType="com.note.vo.NoteVO">
+        SELECT
+            n.id,
+            n.user_id AS userId,
+            u.username,
+            u.avatar,
+            n.title,
+            n.note_type AS noteType,
+            n.location_or_url AS locationOrUrl,
+            n.content,
+            n.summary,
+            n.cover_image AS coverImage,
+            n.view_count AS viewCount,
+            n.is_deleted AS isDeleted,
+            n.is_pinned AS isPinned,
+            n.is_public AS isPublic,
+            n.created_at AS createdAt,
+            n.updated_at AS updatedAt,
+            COALESCE((SELECT COUNT(1) FROM t_note_like l WHERE l.note_id = n.id), 0) AS likeCount,
+            COALESCE((SELECT COUNT(1) FROM t_note_favorite f WHERE f.note_id = n.id), 0) AS favoriteCount,
+            COALESCE((SELECT COUNT(1) FROM t_comment c WHERE c.note_id = n.id AND c.is_deleted = 0), 0) AS commentCount,
+            CASE WHEN EXISTS (
+                SELECT 1 FROM t_note_like current_like
+                WHERE current_like.note_id = n.id AND current_like.user_id = #{currentUserId}
+            ) THEN 1 ELSE 0 END AS isLiked,
+            CASE WHEN EXISTS (
+                SELECT 1 FROM t_note_favorite current_favorite
+                WHERE current_favorite.note_id = n.id AND current_favorite.user_id = #{currentUserId}
+            ) THEN 1 ELSE 0 END AS isFavorited
+        FROM t_note_like nl
+        INNER JOIN t_note_item n ON n.id = nl.note_id
+        LEFT JOIN t_user u ON u.id = n.user_id
+        WHERE nl.user_id = #{userId}
+          AND n.is_deleted = 0
+          AND (n.is_public = 1 OR n.user_id = #{currentUserId})
+        ORDER BY nl.created_at DESC, nl.id DESC
+    </select>
+
+</mapper>

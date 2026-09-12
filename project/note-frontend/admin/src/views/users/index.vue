@@ -34,9 +34,10 @@
       <el-table-column prop="noteCount" label="笔记数量" width="100" />
       <el-table-column prop="lastActiveAt" label="最后活跃时间" width="180" />
       <el-table-column prop="createdAt" label="注册时间" width="180" />
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column label="操作" width="310" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="handleToggleStatus(row)">
+          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+          <el-button link :type="row.status === 1 ? 'warning' : 'success'" @click="handleToggleStatus(row)">
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
           <el-button v-if="row.status === 2" link type="warning" @click="handleUnlock(row)">解锁</el-button>
@@ -81,13 +82,55 @@
         <el-button type="primary" :loading="createLoading" @click="handleCreate">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 编辑用户对话框 -->
+    <el-dialog v-model="editVisible" title="编辑用户信息" width="520px" @closed="resetEditForm">
+      <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="90px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="editForm.username" placeholder="请输入用户名" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="editForm.phone" placeholder="请输入手机号（选填）" />
+        </el-form-item>
+        <el-form-item label="个性签名">
+          <el-input
+            v-model="editForm.bio"
+            placeholder="请输入个性签名（选填，最多30字）"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="账号状态">
+          <el-radio-group v-model="editForm.status">
+            <el-radio :label="1">正常</el-radio>
+            <el-radio :label="0">禁用</el-radio>
+            <el-radio :label="2">锁定</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="修改密码">
+          <el-input
+            v-model="editForm.password"
+            type="password"
+            show-password
+            placeholder="留空则保持原密码不变（至少6位）"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editVisible = false">取消</el-button>
+        <el-button type="primary" :loading="editLoading" @click="handleUpdate">保存修改</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList, toggleUserStatus, unlockUser, resetUserPassword, batchToggleUserStatus, batchDeleteUsers, createUser, deleteUser } from '@/api/admin'
+import { getUserList, toggleUserStatus, unlockUser, resetUserPassword, batchToggleUserStatus, batchDeleteUsers, createUser, updateUser, deleteUser } from '@/api/admin'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -228,6 +271,65 @@ const handleCreate = async () => {
     fetchData()
   } catch { /* handled */ }
   finally { createLoading.value = false }
+}
+
+// 编辑用户
+const editVisible = ref(false)
+const editLoading = ref(false)
+const editFormRef = ref()
+const editForm = ref({
+  id: 0,
+  username: '',
+  email: '',
+  phone: '',
+  bio: '',
+  status: 1,
+  password: '',
+})
+const editRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email' as const, message: '邮箱格式不正确', trigger: 'blur' }],
+}
+
+const handleEdit = (row: any) => {
+  editForm.value = {
+    id: row.id,
+    username: row.username,
+    email: row.email,
+    phone: row.phone || '',
+    bio: row.bio || '',
+    status: row.status ?? 1,
+    password: '',
+  }
+  editVisible.value = true
+}
+
+const resetEditForm = () => {
+  editForm.value = { id: 0, username: '', email: '', phone: '', bio: '', status: 1, password: '' }
+}
+
+const handleUpdate = async () => {
+  const valid = await editFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  if (editForm.value.password && editForm.value.password.length < 6) {
+    ElMessage.warning('密码长度至少为6位')
+    return
+  }
+  editLoading.value = true
+  try {
+    await updateUser(editForm.value.id, {
+      username: editForm.value.username,
+      email: editForm.value.email,
+      phone: editForm.value.phone || undefined,
+      bio: editForm.value.bio || undefined,
+      status: editForm.value.status,
+      password: editForm.value.password ? editForm.value.password : undefined,
+    })
+    ElMessage.success('用户信息修改成功')
+    editVisible.value = false
+    fetchData()
+  } catch { /* handled */ }
+  finally { editLoading.value = false }
 }
 
 onMounted(() => fetchData())

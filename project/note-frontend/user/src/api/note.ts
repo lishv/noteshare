@@ -10,6 +10,10 @@ import type {
   CommentItem,
   CommentDTO,
   FollowStatsVO,
+  NoteDraft,
+  NoteDraftRequest,
+  NotificationItem,
+  PopularTagItem,
 } from '@/types'
 
 // 获取活跃用户列表
@@ -65,6 +69,19 @@ export function updateNote(
 // 删除笔记
 export function deleteNote(noteId: number): Promise<ApiResponse> {
   return request.delete(`/notes/${noteId}`)
+}
+
+// ========== 笔记草稿 (Redis暂存) ==========
+export function saveNoteDraft(data: NoteDraftRequest): Promise<ApiResponse<NoteDraft>> {
+  return request.post('/notes/draft', data)
+}
+
+export function getNoteDraft(noteId?: number): Promise<ApiResponse<NoteDraft>> {
+  return request.get('/notes/draft', noteId ? { noteId } : undefined)
+}
+
+export function deleteNoteDraft(noteId?: number): Promise<ApiResponse> {
+  return request.delete('/notes/draft', noteId ? { params: { noteId } } : undefined)
 }
 
 // 增加笔记浏览量
@@ -164,6 +181,95 @@ export function getFollowStats(userId: number): Promise<ApiResponse<FollowStatsV
 }
 
 export function getFollowedUsers(params?: { page?: number; size?: number }): Promise<ApiResponse<PageResult<User>>> {
-  return request.get('/follow/following', params)
+  return request.get('/follow/list', params)
 }
 
+export function getFollowers(params?: { userId?: number; page?: number; size?: number }): Promise<ApiResponse<PageResult<User>>> {
+  return request.get('/follow/followers', params)
+}
+
+// ========== 笔记回收站 ==========
+export function getRecycleBinNotes(params?: { page?: number; size?: number }): Promise<ApiResponse<PageResult<NoteItem>>> {
+  return request.get('/notes/recycle-bin', params)
+}
+
+export function restoreRecycleNote(noteId: number): Promise<ApiResponse<null>> {
+  return request.put(`/notes/recycle-bin/${noteId}/restore`)
+}
+
+export function hardDeleteRecycleNote(noteId: number): Promise<ApiResponse<null>> {
+  return request.delete(`/notes/recycle-bin/${noteId}`)
+}
+
+export function clearRecycleBin(): Promise<ApiResponse<null>> {
+  return request.delete('/notes/recycle-bin/clear')
+}
+
+// ========== 关注动态流 ==========
+export function getFollowingFeed(params?: { page?: number; size?: number }): Promise<ApiResponse<PageResult<NoteItem>>> {
+  return request.get('/notes/feed', params)
+}
+
+// ========== 全站热度榜 ==========
+export function getTrendingNotes(limit: number = 10): Promise<ApiResponse<NoteItem[]>> {
+  return request.get('/notes/trending', { limit })
+}
+
+// ========== 公共主页推荐 ==========
+export function getRecommendedNotes(params?: {
+  page?: number
+  size?: number
+  tag?: string
+}): Promise<ApiResponse<PageResult<NoteItem>>> {
+  return request.get('/notes/recommend', params)
+}
+
+// ========== 点赞机制 ==========
+export function likeNote(noteId: number): Promise<ApiResponse<null>> {
+  return request.post(`/notes/${noteId}/like`)
+}
+
+export function unlikeNote(noteId: number): Promise<ApiResponse<null>> {
+  return request.delete(`/notes/${noteId}/like`)
+}
+
+export function checkNoteLiked(noteId: number): Promise<ApiResponse<boolean>> {
+  return request.get(`/notes/${noteId}/like`)
+}
+
+export function getMyLikes(params?: {
+  page?: number
+  size?: number
+}): Promise<ApiResponse<PageResult<NoteItem>>> {
+  return request.get('/notes/my-likes', params)
+}
+
+// ========== 站内消息通知 ==========
+export function getNotifications(params?: {
+  type?: string
+  page?: number
+  size?: number
+}): Promise<ApiResponse<PageResult<NotificationItem>>> {
+  return request.get('/notifications', params)
+}
+
+export function getUnreadNotificationCount(): Promise<ApiResponse<number>> {
+  return request.get('/notifications/unread-count')
+}
+
+export function markNotificationAsRead(id: number): Promise<ApiResponse<null>> {
+  return request.put(`/notifications/${id}/read`)
+}
+
+export function removeNotification(id: number): Promise<ApiResponse<null>> {
+  return request.delete(`/notifications/${id}`)
+}
+
+export function markAllNotificationsAsRead(): Promise<ApiResponse<null>> {
+  return request.put('/notifications/read-all')
+}
+
+// ========== 热门标签 ==========
+export function getPopularTags(limit: number = 10): Promise<ApiResponse<PopularTagItem[]>> {
+  return request.get('/tags/popular', { limit })
+}

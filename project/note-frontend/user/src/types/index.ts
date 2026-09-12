@@ -35,6 +35,8 @@ export interface User {
   hasMainLink?: boolean
   noteCount?: number
   followerCount?: number
+  followingCount?: number
+  isFollowing?: boolean
 }
 
 export interface UpdateBioRequest {
@@ -78,6 +80,13 @@ export interface ChangePasswordRequest {
   verificationCode?: string
 }
 
+// 忘记密码请求
+export interface ResetPasswordRequest {
+  email: string
+  verificationCode: string
+  newPassword: string
+}
+
 // 发送验证码请求
 export interface SendCodeRequest {
   email: string
@@ -108,9 +117,16 @@ export interface NoteItem {
   coverImage?: string
   viewCount: number
   favoriteCount?: number
+  likeCount?: number
+  commentCount?: number
+  heatScore?: number
+  isLiked?: boolean
+  isFavorited?: boolean
   isPinned?: number
   isPublic?: number // 1: 公开, 0: 私密
   isDeleted?: number
+  deletedAt?: string
+  tags?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -125,6 +141,7 @@ export interface NoteRequest {
   coverImage?: string
   isPublic?: number // 1: 公开, 0: 私密
   tagIds?: number[]
+  tagNames?: string[]
 }
 
 // 搜索结果
@@ -159,5 +176,48 @@ export interface CommentDTO {
   parentId?: number
   replyToUserId?: number
   replyToCommentId?: number
+}
+
+// 笔记草稿
+export interface NoteDraft {
+  noteId?: number | null
+  title?: string
+  content?: string
+  coverImage?: string
+  isPublic?: number
+  tagIds?: number[]
+  savedAt?: string
+}
+
+export interface NoteDraftRequest {
+  noteId?: number | null
+  title?: string
+  content?: string
+  coverImage?: string
+  isPublic?: number
+  tagIds?: number[]
+}
+
+// 站内通知
+export interface NotificationItem {
+  id: number
+  userId: number
+  senderId?: number
+  senderUsername?: string
+  senderAvatar?: string
+  type: 'COMMENT' | 'FOLLOW' | 'LIKE' | 'SYSTEM' | string
+  title: string
+  content: string
+  targetType?: string
+  targetId?: number
+  isRead: number
+  isDeleted?: number
+  createdAt: string
+}
+
+// 热门标签统计
+export interface PopularTagItem {
+  name: string
+  noteCount: number
 }
 

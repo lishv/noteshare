@@ -21,10 +21,12 @@ public class FollowService {
 
     private final UserFollowMapper userFollowMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
-    public FollowService(UserFollowMapper userFollowMapper, UserMapper userMapper) {
+    public FollowService(UserFollowMapper userFollowMapper, UserMapper userMapper, NotificationService notificationService) {
         this.userFollowMapper = userFollowMapper;
         this.userMapper = userMapper;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -47,6 +49,21 @@ public class FollowService {
         follow.setFollowingId(targetUserId);
         follow.setCreatedAt(LocalDateTime.now());
         userFollowMapper.insert(follow);
+
+        // 发送关注站内通知
+        try {
+            User follower = userMapper.selectById(currentUserId);
+            String followerName = follower != null ? follower.getUsername() : "用户";
+            notificationService.sendNotification(
+                    targetUserId,
+                    currentUserId,
+                    "FOLLOW",
+                    followerName + " 关注了你",
+                    "关注了你的账号，去 TA 的主页看看吧~",
+                    "USER",
+                    currentUserId
+            );
+        } catch (Exception ignored) {}
     }
 
     @Transactional
@@ -75,6 +92,15 @@ public class FollowService {
 
         Page<ActiveUserVO> p = new Page<>(page, size);
         IPage<ActiveUserVO> res = userFollowMapper.selectFollowedUsers(p, followerId);
+        return PageResult.of(res.getTotal(), page, size, res.getRecords());
+    }
+
+    public PageResult<ActiveUserVO> getFollowers(Long targetUserId, Long currentUserId, Integer page, Integer size) {
+        if (page == null) page = 1;
+        if (size == null) size = 50;
+
+        Page<ActiveUserVO> p = new Page<>(page, size);
+        IPage<ActiveUserVO> res = userFollowMapper.selectFollowers(p, targetUserId, currentUserId);
         return PageResult.of(res.getTotal(), page, size, res.getRecords());
     }
 }

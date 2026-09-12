@@ -3,6 +3,7 @@ package com.note.controller.admin;
 import com.note.dto.BatchDeleteDTO;
 import com.note.dto.BatchStatusDTO;
 import com.note.dto.UserCreateDTO;
+import com.note.dto.UserUpdateDTO;
 import com.note.service.AdminUserService;
 import com.note.vo.ActiveUserVO;
 import com.note.vo.PageResult;
@@ -40,6 +41,19 @@ public class AdminUserController {
     @Operation(summary = "用户详情", description = "获取用户详细信息")
     public Result<UserVO> getUserDetail(@PathVariable Long userId) {
         return Result.success(adminUserService.getUserDetail(userId));
+    }
+
+    @PutMapping("/{userId}")
+    @Operation(summary = "修改用户信息", description = "管理员编辑修改用户的基本信息")
+    public Result<UserVO> updateUser(
+            @PathVariable Long userId,
+            @Valid @RequestBody UserUpdateDTO dto,
+            HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("adminId");
+        String adminUsername = (String) request.getAttribute("adminUsername");
+        String ipAddress = request.getRemoteAddr();
+        UserVO result = adminUserService.updateUser(userId, dto, adminId, adminUsername, ipAddress);
+        return Result.success("用户修改成功", result);
     }
 
     @PostMapping
